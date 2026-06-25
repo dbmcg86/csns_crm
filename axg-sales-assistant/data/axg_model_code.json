@@ -1,0 +1,455 @@
+{
+  "_meta": {
+    "product_family": "Yokogawa ADMAG TI Series AXG Magnetic Flowmeter",
+    "source_document": "GS 01E22A01-01EN, 18th Edition, Feb 28 2022",
+    "variant_table": "General-purpose, Submersible, Explosion-protection, Wafer/Flange, PFA Lining, 2.5 to 400 mm",
+    "note": "This is the PRIMARY model-code table. The datasheet contains additional sub-tables (500 mm; ASME Class 600 high-pressure; ceramics tube; hygienic) that are separate small variants to be structured the same way after this one is validated.",
+    "confidence": "Position structure and option codes/descriptions are high-confidence. The process-connection size ranges are flagged 'verify' because the source PDF column was scrambled in text extraction and exact code-to-range alignment must be confirmed against the original PDF before this is trusted in production.",
+    "status": "PILOT DRAFT - requires human verification against source PDF before use"
+  },
+
+  "application_rules": {
+    "_note": "Application-suitability rules that gate whether the AXG can be quoted at all, independent of the model code. These are checked against the customer's process conditions, not against option selections.",
+    "fluid_conductivity": {
+      "type": "hard_minimum",
+      "description": "Minimum fluid conductivity for the meter to measure. Size-dependent and NON-monotonic - the floor must be looked up per size, not memorized as a single value. Below the floor, the meter physically cannot measure; the agent must reject/flag, not quote.",
+      "source": "Datasheet GS 01E22A01-01EN",
+      "floors": [
+        {"size_range": "2.5 to 10 mm (0.1 to 0.4 in)", "min_conductivity_uS_cm": 5},
+        {"size_range": "15 to 125 mm (0.5 to 5 in)",    "min_conductivity_uS_cm": 1},
+        {"size_range": "150 to 400 mm (6 to 16 in)",    "min_conductivity_uS_cm": 3},
+        {"size_range": "500 mm (20 in)",                "min_conductivity_uS_cm": 20}
+      ],
+      "judgment_threshold": {
+        "type": "soft_warning",
+        "status": "TRIBAL KNOWLEDGE - NOT YET CAPTURED",
+        "description": "Above the hard floor there is a low-conductivity margin zone where the meter works but a senior salesperson would stop auto-quoting and ask questions (or steer to another solution). The datasheet hints at this with its note: 'For measuring low conductivity fluids, read Cautions on Selection and Installation.' Allied to define: at what conductivity (regardless of the published floor) does the agent flag for human review?",
+        "value_uS_cm": null,
+        "behavior_when_set": "If customer conductivity is above the hard floor but at/below this threshold -> do not auto-quote; flag for engineer review and ask follow-up questions."
+      },
+      "agent_behavior": "1) Always ask fluid conductivity if not stated (it is a disqualifying question customers rarely volunteer). 2) Look up the hard floor for the quoted size. 3) Below floor: reject with explanation. 4) Above floor but within judgment zone (once set): flag for review. 5) Comfortably above: proceed."
+    }
+  },
+
+  "positions": [
+    {
+      "order": 1,
+      "name": "Model (Size)",
+      "required": true,
+      "options": [
+        {"code": "AXG002", "desc": "2.5 mm (0.1 in)"},
+        {"code": "AXG005", "desc": "5 mm (0.2 in)"},
+        {"code": "AXG010", "desc": "10 mm (0.4 in)"},
+        {"code": "AXG015", "desc": "15 mm (0.5 in)"},
+        {"code": "AXG025", "desc": "25 mm (1 in)"},
+        {"code": "AXG032", "desc": "32 mm (1.25 in)"},
+        {"code": "AXG040", "desc": "40 mm (1.5 in)"},
+        {"code": "AXG050", "desc": "50 mm (2 in)"},
+        {"code": "AXG065", "desc": "65 mm (2.5 in)"},
+        {"code": "AXG080", "desc": "80 mm (3 in)"},
+        {"code": "AXG100", "desc": "100 mm (4 in)"},
+        {"code": "AXG125", "desc": "125 mm (5 in)"},
+        {"code": "AXG150", "desc": "150 mm (6 in)"},
+        {"code": "AXG200", "desc": "200 mm (8 in)"},
+        {"code": "AXG250", "desc": "250 mm (10 in)"},
+        {"code": "AXG300", "desc": "300 mm (12 in)"},
+        {"code": "AXG350", "desc": "350 mm (14 in)"},
+        {"code": "AXG400", "desc": "400 mm (16 in)"}
+      ]
+    },
+    {
+      "order": 2,
+      "name": "Use",
+      "required": true,
+      "options": [
+        {"code": "-G", "desc": "General-purpose"},
+        {"code": "-C", "desc": "Explosion protection"},
+        {"code": "-W", "desc": "Submersible", "limitation": "15 to 400 mm (0.5 to 16 in.), only for Remote sensor", "status": "verified"}
+      ]
+    },
+    {
+      "order": 3,
+      "name": "Construction",
+      "required": true,
+      "options": [
+        {"code": "A", "desc": "Integral Flowmeter"},
+        {"code": "D", "desc": "Remote Sensor (for AXFA11)"},
+        {"code": "E", "desc": "Remote Sensor (for AXG1A)"},
+        {"code": "G", "desc": "Remote Sensor (for AXG4A)"}
+      ]
+    },
+    {
+      "order": 4,
+      "name": "Explosion Protection",
+      "required": true,
+      "options": [
+        {"code": "000", "desc": "Non Explosion Protection Approval"},
+        {"code": "KF2", "desc": "ATEX Flameproof", "limitation": "verify"},
+        {"code": "KJ2", "desc": "ATEX Flameproof with Intrinsically Safe output", "limitation": "verify"},
+        {"code": "KT2", "desc": "ATEX Flameproof w/ IS output for FF, PROFIBUS PA", "limitation": "verify"},
+        {"code": "SF2", "desc": "IECEx Flameproof", "limitation": "verify"},
+        {"code": "SJ2", "desc": "IECEx Flameproof with Intrinsically Safe output", "limitation": "verify"},
+        {"code": "ST2", "desc": "IECEx Flameproof w/ IS output for FF, PROFIBUS PA", "limitation": "verify"},
+        {"code": "FF2", "desc": "FM Flameproof", "limitation": "verify"},
+        {"code": "FJ2", "desc": "FM Flameproof with Intrinsically Safe output", "limitation": "verify"},
+        {"code": "FT2", "desc": "FM Flameproof w/ IS output for FF, PROFIBUS PA", "limitation": "verify"},
+        {"code": "CF2", "desc": "FMc Flameproof (Canada)", "limitation": "verify"},
+        {"code": "CJ2", "desc": "FMc Flameproof with IS output (Canada)", "limitation": "verify"},
+        {"code": "CT2", "desc": "FMc Flameproof w/ IS output for FF, PROFIBUS PA (Canada)", "limitation": "verify"},
+        {"code": "GF2", "desc": "EAC Flameproof", "limitation": "verify"},
+        {"code": "GJ2", "desc": "EAC Flameproof with Intrinsically Safe output", "limitation": "verify"},
+        {"code": "GT2", "desc": "EAC Flameproof w/ IS output for FF", "limitation": "verify"},
+        {"code": "JF5", "desc": "Japan Flameproof", "limitation": "15 to 400 mm, Remote sensor only; connects only to Yokogawa-authorized remote transmitter"},
+        {"code": "PF2", "desc": "Korea Flameproof", "limitation": "verify"},
+        {"code": "UF2", "desc": "INMETRO Flameproof (Brazil)", "limitation": "verify"}
+      ]
+    },
+    {
+      "order": 5,
+      "name": "Process Connection",
+      "required": true,
+      "_verify_note": "VERIFIED against clean datasheet pages (GS 01E22A01-01EN pp. 39-41), 2026-06-10. Size ranges below are confirmed. NOTE: several F304 flange ranges (BA2, BE1, BE2, BE3, BE4) were WRONG in the prior scrambled-text extraction and have been corrected here.",
+      "options": [
+        {"code": "AA1", "desc": "ASME Class 150 Wafer", "size_range": "2.5 to 200 mm", "status": "verified"},
+        {"code": "AA2", "desc": "ASME Class 300 Wafer", "size_range": "2.5 to 200 mm", "status": "verified"},
+        {"code": "AE1", "desc": "EN PN10 Wafer", "size_range": "200 mm only", "status": "verified"},
+        {"code": "AE2", "desc": "EN PN16 Wafer", "size_range": "65 to 200 mm", "status": "verified"},
+        {"code": "AE4", "desc": "EN PN40 Wafer", "size_range": "2.5 to 50 mm", "status": "verified"},
+        {"code": "AG1", "desc": "JIS F12 Wafer", "size_range": "80 to 200 mm", "status": "verified"},
+        {"code": "AJ1", "desc": "JIS 10K Wafer", "size_range": "2.5 to 200 mm", "status": "verified"},
+        {"code": "AJ2", "desc": "JIS 20K Wafer", "size_range": "2.5 to 200 mm", "status": "verified"},
+        {"code": "AP1", "desc": "JPI Class 150 Wafer", "size_range": "2.5 to 200 mm", "exclusions": "32, 65, 125 mm not available", "status": "verified"},
+        {"code": "BA1", "desc": "ASME Class 150 Flange (F304)", "size_range": "2.5 to 300 mm", "status": "verified"},
+        {"code": "BA2", "desc": "ASME Class 300 Flange (F304)", "size_range": "2.5 to 300 mm", "status": "verified", "correction": "was '200 to 400 mm' in scrambled extraction"},
+        {"code": "BE1", "desc": "EN PN10 Flange (F304)", "size_range": "200 to 400 mm", "status": "verified", "correction": "was '65 to 300 mm'"},
+        {"code": "BE2", "desc": "EN PN16 Flange (F304)", "size_range": "65 to 300 mm", "status": "verified", "correction": "was '80 to 400 mm'"},
+        {"code": "BE3", "desc": "EN PN25 Flange (F304)", "size_range": "80 to 400 mm", "status": "verified", "correction": "was '2.5 to 50 mm'"},
+        {"code": "BE4", "desc": "EN PN40 Flange (F304)", "size_range": "2.5 to 50 mm", "status": "verified", "correction": "was '80 to 400 mm'"},
+        {"code": "BG1", "desc": "JIS F12 Flange (F304)", "size_range": "80 to 400 mm", "status": "verified"},
+        {"code": "BJ1", "desc": "JIS 10K Flange (F304)", "size_range": "2.5 to 300 mm", "status": "verified"},
+        {"code": "BJ2", "desc": "JIS 20K Flange (F304)", "size_range": "2.5 to 300 mm", "status": "verified"},
+        {"code": "BP1", "desc": "JPI Class 150 Flange (F304)", "size_range": "2.5 to 300 mm", "exclusions": "32, 65, 125 mm not available", "status": "verified"},
+        {"code": "DE4", "desc": "EN PN40 Flange (Nominal Diameter 10 mm)", "size_range": "2.5 to 10 mm", "status": "verified"},
+        {"code": "DJ1", "desc": "JIS 10K Flange (Nominal Diameter 10 mm)", "size_range": "2.5 to 10 mm", "status": "verified"},
+        {"code": "DJ2", "desc": "JIS 20K Flange (Nominal Diameter 10 mm)", "size_range": "2.5 to 10 mm", "status": "verified"},
+        {"code": "PA1", "desc": "ASME Class 150 Flange (F316)", "size_range": "2.5 to 300 mm", "exclusions": "32, 65, 125 mm not available", "status": "verified"},
+        {"code": "PA2", "desc": "ASME Class 300 Flange (F316)", "size_range": "2.5 to 300 mm", "exclusions": "32, 65, 125 mm not available", "status": "verified"},
+        {"code": "PE1", "desc": "EN PN10 Flange (F316)", "size_range": "200 to 400 mm", "status": "verified"},
+        {"code": "PE2", "desc": "EN PN16 Flange (F316)", "size_range": "80 to 300 mm", "exclusions": "125 mm not available", "status": "verified"},
+        {"code": "PE3", "desc": "EN PN25 Flange (F316)", "size_range": "80 to 400 mm", "status": "verified"},
+        {"code": "PE4", "desc": "EN PN40 Flange (F316)", "size_range": "2.5 to 50 mm", "exclusions": "32 mm not available", "status": "verified"},
+        {"code": "PJ1", "desc": "JIS 10K Flange (F316)", "size_range": "2.5 to 300 mm", "exclusions": "32, 65, 125 mm not available", "status": "verified"},
+        {"code": "CA1", "desc": "ASME Class 150 Flange (Carbon Steel)", "size_range": "50 to 400 mm", "status": "verified"},
+        {"code": "CA2", "desc": "ASME Class 300 Flange (Carbon Steel)", "size_range": "50 to 300 mm", "status": "verified"},
+        {"code": "CE1", "desc": "EN PN10 Flange (Carbon Steel)", "size_range": "200 to 400 mm", "status": "verified"},
+        {"code": "CE2", "desc": "EN PN16 Flange (Carbon Steel)", "size_range": "65 to 300 mm", "status": "verified"},
+        {"code": "CE4", "desc": "EN PN40 Flange (Carbon Steel)", "size_range": "50 mm only", "status": "verified"},
+        {"code": "CG1", "desc": "JIS F12 Flange (Carbon Steel)", "size_range": "80 to 400 mm", "status": "verified"},
+        {"code": "CJ1", "desc": "JIS 10K Flange (Carbon Steel)", "size_range": "50 to 400 mm", "status": "verified"},
+        {"code": "CJ2", "desc": "JIS 20K Flange (Carbon Steel)", "size_range": "50 to 300 mm", "status": "verified"},
+        {"code": "CS1", "desc": "AS Table D Flange (Carbon Steel)", "size_range": "50 to 400 mm", "exclusions": "65, 125 mm not available", "status": "verified"},
+        {"code": "CS2", "desc": "AS Table E Flange (Carbon Steel)", "size_range": "50 to 300 mm", "exclusions": "65, 125 mm not available", "status": "verified"}
+      ]
+    },
+    {
+      "order": 6,
+      "name": "Lining",
+      "required": true,
+      "options": [
+        {"code": "A", "desc": "PFA Lining"}
+      ]
+    },
+    {
+      "order": 7,
+      "name": "Electrode",
+      "required": true,
+      "options": [
+        {"code": "L", "desc": "Stainless Steel 316L"},
+        {"code": "P", "desc": "Platinum-Iridium"},
+        {"code": "H", "desc": "Nickel Alloy"},
+        {"code": "T", "desc": "Tantalum"},
+        {"code": "V", "desc": "Titanium"},
+        {"code": "W", "desc": "Tungsten Carbide", "limitation": "2.5, 5, 10 mm (0.1, 0.2, 0.4 in) not available"}
+      ]
+    },
+    {
+      "order": 8,
+      "name": "Grounding Device",
+      "required": true,
+      "options": [
+        {"code": "1", "desc": "None"},
+        {"code": "2", "desc": "Grounding Rings", "limitation": "must also select ring type/material from optional codes"},
+        {"code": "3", "desc": "Built-in Grounding Electrodes", "limitation": "must also select type/material from optional codes"}
+      ]
+    },
+    {
+      "order": 9,
+      "name": "Housing and Coating",
+      "required": true,
+      "options": [
+        {"code": "1", "desc": "Standard Material with Standard Coating"},
+        {"code": "2", "desc": "Standard Material with Rugged Coating"}
+      ]
+    },
+    {
+      "order": 10,
+      "name": "Cable Entry",
+      "required": true,
+      "options": [
+        {"code": "0", "desc": "JIS G1/2 Female"},
+        {"code": "2", "desc": "ASME 1/2 NPT Female"},
+        {"code": "4", "desc": "ISO M20x1.5 Female"}
+      ]
+    },
+    {
+      "order": 11,
+      "name": "Accuracy",
+      "required": true,
+      "options": [
+        {"code": "B", "desc": "Standard"},
+        {"code": "C", "desc": "High Grade", "limitation": "25 to 200 mm (1 to 8 in.) only", "status": "verified"}
+      ]
+    },
+    {
+      "order": 12,
+      "name": "Power Supply",
+      "required": true,
+      "options": [
+        {"code": "-1", "desc": "100-240 V AC / 100-120 V DC", "limitation": "Integral Flowmeter only"},
+        {"code": "-2", "desc": "24 V AC / DC", "limitation": "Integral Flowmeter only"},
+        {"code": "-N", "desc": "None (Remote Sensor)", "limitation": "Remote Sensor only"}
+      ]
+    },
+    {
+      "order": 13,
+      "name": "Communication and I/O",
+      "required": true,
+      "options": [
+        {"code": "D#", "desc": "BRAIN and I/O", "note": "# = A,B,C,D,E,F,G,H,J,K,P,Q,R,S,T (Type A to K, P to T)", "limitation": "Integral Flowmeter only"},
+        {"code": "J#", "desc": "HART 7 and I/O", "note": "# = A,B,C,D,E,F,G,H,J,K,P,Q,R,S,T (Type A to K, P to T)", "limitation": "Integral Flowmeter only"},
+        {"code": "M#", "desc": "Modbus and I/O", "note": "# = 0, 2, 6", "limitation": "Integral Flowmeter only"},
+        {"code": "F0", "desc": "FOUNDATION Fieldbus I/O", "limitation": "Integral Flowmeter only"},
+        {"code": "G0", "desc": "PROFIBUS PA I/O", "limitation": "Integral Flowmeter only"},
+        {"code": "NN", "desc": "None (Remote Sensor)", "limitation": "Remote Sensor only"}
+      ]
+    },
+    {
+      "order": 14,
+      "name": "Transmitter Wiring Terminal",
+      "required": true,
+      "options": [
+        {"code": "1", "desc": "M4 Screw-type", "limitation": "Integral Flowmeter only"},
+        {"code": "2", "desc": "Clamp Type", "limitation": "Integral Flowmeter only"},
+        {"code": "N", "desc": "None (Remote Sensor)", "limitation": "Remote Sensor only"}
+      ]
+    },
+    {
+      "order": 15,
+      "name": "Display",
+      "required": true,
+      "options": [
+        {"code": "1", "desc": "With Display (English, Multi-language)", "limitation": "Integral Flowmeter only"},
+        {"code": "2", "desc": "With Display (English, Chinese)", "limitation": "Integral Flowmeter only"},
+        {"code": "N", "desc": "Without Display / Remote Sensor"}
+      ]
+    },
+    {
+      "order": 16,
+      "name": "Optional Specification",
+      "required": false,
+      "options": [
+        {"code": "/#", "desc": "Refer to optional specification table (separate section of datasheet)"}
+      ]
+    }
+  ],
+
+  "cross_position_rules": [
+    {
+      "id": "remote_sensor_blanks",
+      "rule": "If Construction is a Remote Sensor (D, E, or G), then Power Supply must be -N, Communication and I/O must be NN, Transmitter Wiring Terminal must be N, and Display must be N.",
+      "source": "Datasheet Note 8",
+      "confidence": "high"
+    },
+    {
+      "id": "use_vs_explosion",
+      "rule": "Any non-000 explosion code excludes Use -G/-W/-H, so it FORCES Use = -C. Confirmed: every flameproof code lists '-G, -W, -H' as Not Available. Additionally, all IS-output variants (J-suffix and T-suffix codes, e.g. FJ2/FT2) exclude remote-sensor construction (D/E/G) and require Transmitter Wiring Terminal = 2. See explosion_protection_restrictions for the full per-code mandatory/not-available detail.",
+      "confidence": "VERIFIED against 'Restriction for Explosion protection type' table, datasheet pp. 53-55 (2026-06-10)."
+    },
+    {
+      "id": "process_connection_size",
+      "rule": "Each Process Connection code is only valid for a specific size range (see size_range and exclusions per option). The selected Model (size) must fall within the chosen connection's range and not hit an exclusion.",
+      "confidence": "VERIFIED against clean datasheet pp. 39-41 (2026-06-10). Several F304 flange ranges were corrected from the scrambled extraction."
+    },
+    {
+      "id": "tungsten_small_sizes",
+      "rule": "Electrode W (Tungsten Carbide) is not available for sizes 2.5, 5, 10 mm.",
+      "confidence": "high"
+    }
+  ],
+
+  "tribal_knowledge_gaps": [
+    "Which option combinations are technically valid but never actually ordered / not stocked?",
+    "Which combinations carry long lead times worth warning the customer about?",
+    "Which electrode/lining materials Allied recommends or avoids for common local fluids (the datasheet lists what's available, not what's appropriate)?"
+  ],
+
+  "allied_defaults": {
+    "_note": "Captured from Allied tribal knowledge - selections to assume when a customer does not specify. These are starting points the agent proposes, not hard rules; a reviewer can override.",
+    "Use": {"code": "-C", "desc": "Explosion protection", "source": "Allied standard (stocking position + fail-safe)", "note": "ALWAYS default to -C / A / FF2 unless explicitly overridden. Rationale: an explosion-proof unit is safe in a general-purpose area, but a general-purpose unit in a classified area is a code violation and hazard - the failure is one-directional, so -C fails safe. The agent must NOT infer 'this looks general-purpose' and down-spec on its own; deciding an area is non-hazardous is an engineering/safety call for a human. Down-spec to -G/000 ONLY on an explicit instruction (customer states general-purpose, or a reviewer changes it). When area is unstated, hold -C and ask to confirm rather than assuming."},
+    "Construction": {"code": "A", "desc": "Integral Flowmeter", "source": "Allied standard", "note": "Integral mount is the default; switch to remote sensor (E/G) only on explicit need (transmitter mounted away from sensor)."},
+    "Explosion Protection": {"code": "FF2", "desc": "FM Flameproof", "source": "Allied standard", "note": "Default FM flameproof, paired with the -C Use default. FJ2 (with IS output) and other approval bodies are explicit-override exceptions, not the default."},
+    "Process Connection": {"flanged_default": {"code": "BA1", "desc": "ASME Class 150 Flange (F304)"}, "wafer_default": {"code": "AA1", "desc": "ASME Class 150 Wafer"}, "source": "Allied standard", "note": "Allied almost always uses BA1 for flanged connections and AA1 for wafer. Other ratings/standards are exceptions to confirm with the customer."},
+    "Electrode": {"code": "L", "desc": "Stainless Steel 316L", "source": "Allied standard"},
+    "Grounding Device": {"code": "2", "desc": "Grounding Rings", "source": "Allied standard"},
+    "Communication and I/O": {"code": "JA", "desc": "HART 7 + I/O Type A (active 4-20 mA current output + passive pulse/status output, no inputs)", "source": "Allied standard", "note": "Selecting HART (J-prefix) excludes explosion code FT2, which is reserved for FOUNDATION Fieldbus / PROFIBUS PA. For a HART build, explosion protection narrows to FF2 (flameproof) or FJ2 (flameproof with IS output)."},
+    "Optional Specification": {"code": "/GRL", "desc": "Grounding Rings, Plate Type L (Stainless Steel 316L, thin type)", "source": "Allied standard", "verify": "Confirm GRL is permitted with Explosion-protection builds (-C / non-000) - datasheet footnote indicates some grounding ring types are not applicable with explosion protection, and the applicability grid did not survive text extraction."},
+    "Cable Entry": {"code": "2", "desc": "ASME 1/2 NPT Female", "source": "Allied standard"},
+    "Power Supply": {"code": "-1", "desc": "100-240 V AC", "source": "Allied standard"},
+    "Accuracy": {"code": "B", "desc": "Standard", "source": "Allied standard"}
+  },
+
+  "companion_items": {
+    "_note": "Items that are not part of the AXG model code but MUST be quoted alongside it for a complete order. Driven deterministically by model-code selections.",
+    "signal_cable": {
+      "applies_when": "Construction is a Remote Sensor (code D, E, or G). Integral (A) needs no signal cable.",
+      "rule": "A remote sensor requires an AX01C signal cable between sensor and transmitter. The cable variant is determined by the matching transmitter, and the maximum length depends on it.",
+      "WARNING_suffix_letters_do_not_align": "The AX01C suffix letter does NOT match the construction-code letter except by coincidence. Map explicitly using the table below.",
+      "mapping": [
+        {"construction_code": "E", "construction_desc": "Remote Sensor for AXG1A",  "cable": "AX01C-B", "max_length_m": 200},
+        {"construction_code": "G", "construction_desc": "Remote Sensor for AXG4A",  "cable": "AX01C-C", "max_length_m": 100},
+        {"construction_code": "D", "construction_desc": "Remote Sensor for AXFA11", "cable": "AX01C-D", "max_length_m": 200}
+      ],
+      "finish": {
+        "finished": "AX01C-B / -C / -D are pre-terminated (finished) for their transmitter.",
+        "unfinished": "AX01C-A is unfinished - cut to length and field-terminated; not transmitter-specific."
+      },
+      "length_spec": "Specify length L (1 to 200 m). Length tolerance bands: finished 1-9 m (0/+2%), 10-200 m (0/+1%).",
+      "special_case": "Marine Approval Type limits cable to 5 m max.",
+      "source": "Datasheet AX01C section (clean datasheet image) + GS text 'Maximum Cable Length' (lines 407-411). High confidence."
+    },
+    "refines_red_flag": "The earlier red flag 'cable run > 100 m' is now precise: a run over 100 m rules OUT the AXG4A transmitter (100 m max) and requires AXG1A or AXFA11G (200 m max). The agent should steer the transmitter choice accordingly."
+  },
+
+  "optional_codes": {
+    "_note": "The Optional Specification table (position 16 '/#'). Verified against clean datasheet pp. 56-64 (2026-06-10). Grouped by the datasheet's own categories. Each code is added as a '/CODE' suffix.",
+
+    "application_function": [
+      {"code": "PM", "name": "Mirror Finished PFA", "for": "adhesive fluid; mirror finish on PFA lining inner surface (sizes 15-400 mm)"},
+      {"code": "CM", "name": "Mirror Finished Ceramics", "for": "adhesive fluid; mirror finish on ceramics tube (sizes 5-200 mm)"},
+      {"code": "H", "name": "Vent Hole", "for": "PERMEABLE fluid (nitric acid, hydrofluoric acid, high-temp sodium hydroxide, black liquor). Lets permeated fluid escape between lining and measuring pipe. Flange-type PFA except high-pressure type.", "key_rule": "This is the recommended MITIGATION for permeable fluids - see bucket 4 permeable-fluid rule."},
+      {"code": "ELC", "name": "DC Noise Cut Circuit", "for": "electrolytic bath / DC noise. Needs conductivity >= 50 microS/cm and size >= 15 mm. Not with empty-pipe detection / electrode diagnostics / wetted-resistance functions."},
+      {"code": "DHC", "name": "Potting Terminal Box with Cable", "for": "district heating/cooling, condensation-proof (remote sensor). Requires JIS G1/2 cable entry. Not with optional code L###."},
+      {"code": "L###", "name": "Signal & Excitation Cable Length", "for": "remote sensor; ### = 001 to 200 (meters). Max 100 m with AXG4A, 200 m with AXG1A/AXFA11. If not selected, a 30 m cable is pre-wired."},
+      {"code": "RW", "name": "Wafer Type Replacement Model", "for": "lay length compatible with previous ADMAG/YEWMAG series for retrofit. MUST also select GAN. See companion replacement_model in dimensions/retrofit file."},
+      {"code": "K1", "name": "Oil Prohibited Use", "for": "oxygen / oil-free service; parts cleaned and packed oil-free, 'OIL FREE' label"},
+      {"code": "K5", "name": "Oil Prohibited Use with Dehydration", "for": "oil-free + dried with desiccant, 'OIL & WATER FREE' label"},
+      {"code": "MU", "name": "Mass Unit Setting", "for": "flow in mass units; specify fluid density"},
+      {"code": "C1", "name": "Signal Down on Failure", "for": "output <= 2.4 mA on CPU failure/alarm. Not with comm M0/M2/F0/G0/P0."},
+      {"code": "C2", "name": "Signal Down on Failure (NAMUR NE43)", "for": "output 3.8-20.5 mA, low 2.4 mA on failure. Not with comm M#/F0/G0/P0."},
+      {"code": "C3", "name": "Signal Up on Failure (NAMUR NE43)", "for": "output 3.8-20.5 mA, high 21.6 mA on failure. Not with comm M#/F0/G0/P0."},
+      {"code": "HF2", "name": "Enhanced Dual Frequency Excitation", "for": "difficult apps - high-concentration slurry or low-conductivity fluid. Sizes 25-200 mm, construction A/E/G, comm HART/BRAIN, accuracy B. Must be added to both sensor and transmitter for remote."},
+      {"code": "MC", "name": "microSD Card", "for": "parameter store/restore and data logging"}
+    ],
+
+    "certifications_regional": [
+      {"code": "EC", "name": "CE Marking", "note": "not for AXG500; specific process-connection codes only; not with W2"},
+      {"code": "E21", "name": "NAMUR NE21", "note": "EMC; not with comm M#/F0/G0/P0"},
+      {"code": "CS", "name": "Canada Domestic Sales", "note": "CRN registration; not with ceramics lining"},
+      {"code": "PJ", "name": "Japan Domestic Sales", "note": "mandatory when destination is Japan"},
+      {"code": "3A", "name": "3-A Sanitary Certification", "note": "hygienic; EPDM gasket; remote transmitter must be AXG4A"},
+      {"code": "VR", "name": "EAC Approval + Russian Pattern", "note": "Russia"},
+      {"code": "VE", "name": "EAC Approval without Russian Pattern", "note": "EEU except Russia"},
+      {"code": "SL", "name": "SIL Certification", "note": "IEC 61508; SIL2 simplex / SIL3 redundant. Not with comm M#/F0/G0/P0 or ELC."},
+      {"code": "WCD", "name": "Marine Approval", "note": "limits cable to 5 m; not with RW"},
+      {"code": "TS1", "name": "TSG China Pressure Grade GC1", "note": "sizes 50-500 mm; not with ceramics lining"},
+      {"code": "TS2", "name": "TSG China Pressure Grade GC2", "note": "sizes 50-500 mm; no liquid penetrant test"}
+    ],
+
+    "piping_parts": [
+      {"code": "BSC", "name": "Bolts, Nuts and Gaskets (Type C)", "material": "SS304 bolts/nuts, chloroprene rubber (CR) gasket 3 mm. For wafer (AJ1/AJ2/AA1)."},
+      {"code": "BSF", "name": "Bolts, Nuts and Gaskets (Type F)", "material": "SS304 bolts/nuts, PTFE-sheathed non-asbestos gasket 3 mm. For wafer (AJ1/AJ2/AA1)."},
+      {"code": "W2", "name": "Hygienic Connection Parts", "material": "SS SCS13 clamp, 316L ferrule, EPDM gasket"},
+      {"code": "SCT", "name": "Stainless Steel Tag Plate", "material": "SS304 pendant tag plate"},
+      {"code": "SB", "name": "Stainless Steel Mounting Bracket", "material": "remote transmitter bracket, SS304"}
+    ],
+
+    "grounding_rings": [
+      {"code": "GRL", "name": "Plate Type L", "material": "SS 316L, THIN", "thickness": "1 mm (2.5-200 mm) / 2 mm (250-400 mm)", "matches_electrode": "L (316L)"},
+      {"code": "GRN", "name": "Plate Type N", "material": "SS 316L, THICK", "thickness": "3 mm (2.5-400 mm) / 4 mm (500 mm)", "use_when": "high-pressure / high-torque flange (ASME 300, PN40+)"},
+      {"code": "GRH", "name": "Plate Type H", "material": "Nickel Alloy, THIN", "matches_electrode": "H (Nickel Alloy)"},
+      {"code": "GRJ", "name": "Plate Type J", "material": "Nickel Alloy, THICK", "matches_electrode": "H (Nickel Alloy)"},
+      {"code": "GRV", "name": "Plate Type V", "material": "Titanium, THIN", "matches_electrode": "V (Titanium)"},
+      {"code": "GRW", "name": "Plate Type W", "material": "Titanium, THICK", "matches_electrode": "V (Titanium)"},
+      {"code": "GRP", "name": "Electrode Type P", "material": "Platinum-Iridium", "matches_electrode": "P", "permeable_excluded": true},
+      {"code": "GRT", "name": "Electrode Type T", "material": "Tantalum", "matches_electrode": "T", "permeable_excluded": true},
+      {"code": "GSN", "name": "Metal Hat Grounding Ring (single side)", "material": "SS 316L, sizes 80-400 mm"},
+      {"code": "GDN", "name": "Metal Hat Grounding Rings (both sides)", "material": "SS 316L, sizes 80-400 mm"},
+      {"code": "GAN", "name": "Grounding Ring for Wafer Type Replacement Model", "material": "SS F316L, sizes 25-200 mm", "rule": "MANDATORY with RW (replacement model)"}
+    ],
+
+    "builtin_grounding_electrodes": [
+      {"code": "GBP", "name": "Built-in Grounding Electrode Type P", "material": "Platinum-Iridium", "matches_electrode": "P", "sizes": "150-400 mm flange", "permeable_excluded": true},
+      {"code": "GBT", "name": "Built-in Grounding Electrode Type T", "material": "Tantalum", "matches_electrode": "T", "sizes": "150-400 mm flange", "permeable_excluded": true}
+    ],
+
+    "gaskets": [
+      {"code": "GA", "name": "Plastic Pipe Gaskets", "material": "Fluororubber (Viton)", "for": "general plastic pipe"},
+      {"code": "GC", "name": "Plastic Pipe Acid-resistant Gaskets", "material": "acid-resistant fluororubber (Viton, special formulation)", "for": "ACID service on plastic pipe"},
+      {"code": "GD", "name": "Plastic Pipe Alkali-resistant Gaskets", "material": "alkali-resistant fluororubber (Viton, special formulation)", "for": "ALKALI service on plastic pipe"},
+      {"code": "GF", "name": "Metal Pipe Alkali-resistant Gaskets", "material": "fluorocarbon resin (carbon)", "for": "alkali service on metal pipe; ceramics lining"},
+      {"code": "GH", "name": "Hygienic Use Silicone Rubber Gaskets", "material": "silicone rubber", "for": "hygienic, high-temp (>=120 C)"}
+    ],
+
+    "key_selection_rules": [
+      "Grounding-ring material should MATCH the electrode material (L->GRL, H->GRH/GRJ, V->GRV/GRW, P->GRP, T->GRT). Your default electrode L pairs with GRL.",
+      "Thin vs thick ring tracks pressure: standard (ASME 150) -> thin (GRL); high pressure/torque (ASME 300, PN40+) -> thick (GRN).",
+      "Replacement model (RW) FORCES GAN grounding ring (F316L).",
+      "Permeable fluids: exclude electrode-type rings (GRP/GRT) and built-in electrodes (GBP/GBT); recommend Vent Hole (H); pick acid (GC) or alkali (GD) gasket per fluid."
+    ]
+  },
+
+  "explosion_protection_restrictions": {
+    "_note": "The 'Restriction for Explosion protection type' table (datasheet pp. 53-55), verified 2026-06-10. For each explosion code: what it MANDATES and what it makes NOT AVAILABLE. This is the detail position 4 deferred to.",
+
+    "universal_rules": [
+      "EVERY non-000 explosion code excludes Use -G/-W/-H -> forces Use = -C.",
+      "All IS-output variants (J-suffix, T-suffix) exclude remote-sensor Construction (D/E/G) and MANDATE Transmitter Wiring Terminal = 2.",
+      "Most codes exclude Optional Code EC (CE Marking) - except the ATEX K-codes, which MANDATE EC.",
+      "FM, FMc require Cable Entry 2 (NPT). Most non-North-American codes exclude Cable Entry 0 (JIS G1/2)."
+    ],
+
+    "allied_default_FF2": {
+      "code": "FF2",
+      "desc": "FM Flameproof - Allied's standard explosion code",
+      "mandatory": ["Cable Entry 2 (ASME 1/2 NPT)"],
+      "not_available": ["Use -G/-W/-H (forces -C)", "Grounding Device 3 (built-in)", "Communication I/O Type P,Q,R,S,T,P0 (incl. EtherNet/IP)", "Optional Code EC", "Optional Codes GBP, GBT (built-in electrodes)"],
+      "cross_check": "FF2 MANDATING Cable Entry 2 confirms Allied's independently-set NPT default. The standard Allied build (FF2 + JA HART + cable entry 2 + /GRL plate ring) is fully compatible - none of FF2's exclusions are hit."
+    },
+
+    "by_code": {
+      "_format": "code: {mandatory: [...], not_available: [...]}",
+      "FJ2": {"mandatory": ["Cable Entry 2 (NPT)", "Comm Type P,Q,R,S,T", "Wiring Terminal 2"], "not_available": ["Use -G/-W/-H", "Construction D,E,G", "Grounding Device 3", "Opt EC", "Opt GBP,GBT"]},
+      "FT2": {"mandatory": ["Cable Entry 2 (NPT)", "Comm Type F0,G0", "Wiring Terminal 2"], "not_available": ["Use -G/-W/-H", "Construction D,E,G", "Grounding Device 3", "Opt EC", "Opt GBP,GBT"]},
+      "KF2": {"mandatory": ["Opt EC"], "not_available": ["Use -G/-W/-H", "Process Conn AG1,AJ#,AP1,BG1,BJ#,BP1,CG1,CJ#,CS#,DJ#,EA4,PJ1", "Cable Entry 0", "Comm P,Q,R,S,T,P0", "Opt CS,RW,GAN"]},
+      "KJ2": {"mandatory": ["Comm P,Q,R,S,T", "Opt EC", "Wiring Terminal 2"], "not_available": ["Use -G/-W/-H", "Construction D,E,G", "Process Conn (as KF2)", "Cable Entry 0", "Opt CS,RW,GAN"]},
+      "KT2": {"mandatory": ["Comm F0,G0", "Opt EC", "Wiring Terminal 2"], "not_available": ["Use -G/-W/-H", "Construction D,E,G", "Process Conn (as KF2)", "Cable Entry 0", "Opt CS,RW,GAN"]},
+      "SF2": {"mandatory": [], "not_available": ["Use -G/-W/-H", "Cable Entry 0", "Comm P,Q,R,S,T,P0", "Opt EC (excludes combo with WCD)"]},
+      "SJ2": {"mandatory": ["Comm P,Q,R,S,T", "Wiring Terminal 2"], "not_available": ["Use -G/-W/-H", "Construction D,E,G", "Cable Entry 0", "Opt EC"]},
+      "ST2": {"mandatory": ["Comm F0,G0", "Wiring Terminal 2"], "not_available": ["Use -G/-W/-H", "Construction D,E,G", "Cable Entry 0", "Opt EC"]},
+      "CF2": {"mandatory": ["Cable Entry 2 (NPT)", "Opt CS"], "not_available": ["Use -G/-W/-H", "Process Conn EA4", "Lining C", "Grounding Device 3", "Comm P,Q,R,S,T,P0", "Opt EC", "Opt GBP,GBT,RW,GAN"]},
+      "CJ2": {"mandatory": ["Cable Entry 2 (NPT)", "Comm P,Q,R,S,T", "Wiring Terminal 2", "Opt CS"], "not_available": ["Use -G/-W/-H", "Construction D,E,G", "Process Conn EA4", "Lining C", "Grounding Device 3", "Opt EC", "Opt GBP,GBT,RW,GAN"]},
+      "CT2": {"mandatory": ["Cable Entry 2 (NPT)", "Comm F0,G0", "Wiring Terminal 2", "Opt CS"], "not_available": ["Use -G/-W/-H", "Construction D,E,G", "Process Conn EA4", "Lining C", "Grounding Device 3", "Opt EC", "Opt GBP,GBT,RW,GAN"]},
+      "GF2": {"mandatory": ["Opt VE,VR"], "not_available": ["Use -G/-W/-H", "Cable Entry 0", "Comm P,Q,R,S,T,P0", "Opt EC,CS,RW,GAN"]},
+      "GJ2": {"mandatory": ["Comm P,Q,R,S,T", "Wiring Terminal 2", "Opt VE,VR"], "not_available": ["Use -G/-W/-H", "Construction D,E,G", "Cable Entry 0", "Opt EC,CS,RW,GAN"]},
+      "GT2": {"mandatory": ["Comm F0", "Wiring Terminal 2", "Opt VE,VR"], "not_available": ["Use -G/-W/-H", "Construction D,E,G", "Cable Entry 0", "Opt EC,CS,RW,GAN"]},
+      "JF5": {"mandatory": ["Cable Entry 4 (ISO M20)", "Opt VS#"], "not_available": ["Use -G/-W/-H", "Process Conn C##", "Cable Entry 0,2", "Comm P,Q,R,S,T", "Display N (integral/transmitter)"]},
+      "NF2": {"mandatory": [], "not_available": ["Use -G/-W/-H", "Cable Entry 0", "Comm P,Q,R,S,T,P0", "Opt EC"]},
+      "NJ2": {"mandatory": ["Comm P,Q,R,S,T", "Wiring Terminal 2"], "not_available": ["Use -G/-W/-H", "Construction D,E,G", "Cable Entry 0", "Opt EC"]},
+      "NT2": {"mandatory": ["Comm F0,G0", "Wiring Terminal 2"], "not_available": ["Use -G/-W/-H", "Construction D,E,G", "Cable Entry 0", "Opt EC"]},
+      "PF2": {"mandatory": [], "not_available": ["Use -G/-W/-H", "Cable Entry 0", "Comm P,Q,R,S,T,P0", "Opt EC,JC"]},
+      "UF2": {"mandatory": [], "not_available": ["Use -G/-W/-H", "Cable Entry 0", "Comm P,Q,R,S,T,P0", "Opt EC,CS,JC"]},
+      "UJ2": {"mandatory": ["Comm P,Q,R,S,T", "Wiring Terminal 2"], "not_available": ["Use -G/-W/-H", "Construction D,E,G", "Cable Entry 0", "Opt EC,CS,JC"]},
+      "UT2": {"mandatory": ["Comm F0,G0", "Wiring Terminal 2"], "not_available": ["Use -G/-W/-H", "Construction D,E,G", "Cable Entry 0", "Opt EC,CS,JC"]}
+    }
+  }
+}
