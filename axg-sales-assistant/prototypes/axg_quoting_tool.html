@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AXG Quoting Assistant — live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --panel:#15181c;--panel2:#1c2025;--panel3:#23282e;--paper:#f3efe6;--ink:#21262d;--inkmute:#5d6470;
+    --line:rgba(255,255,255,.09);--linep:rgba(0,0,0,.10);
+    --signal:#f0a838;--deflt:#46a4bd;--rule:#6cae73;--flag:#e3623c;--mute:#878e98;--txt:#dfe3e8;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;--disp:'Space Grotesk',system-ui,sans-serif;
+    --body:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--panel);color:var(--txt);font-family:var(--body);line-height:1.5;
+    background-image:linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);background-size:32px 32px}
+  .wrap{max-width:1000px;margin:0 auto;padding:30px 20px 80px}
+  header{border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:22px}
+  .kick{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--signal);margin:0 0 9px}
+  h1{font-family:var(--disp);font-weight:600;font-size:clamp(24px,4vw,34px);letter-spacing:-.02em;margin:0;line-height:1.05}
+  .sub{color:var(--mute);max-width:64ch;margin:11px 0 0;font-size:14.5px}
+  .legend{display:flex;flex-wrap:wrap;gap:15px;margin-top:16px;font-family:var(--mono);font-size:11px}
+  .legend span{display:inline-flex;align-items:center;gap:7px;color:var(--mute)}
+  .dot{width:9px;height:9px;border-radius:2px;display:inline-block}
+
+  .inputcard{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:18px}
+  .inputcard label{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--mute);text-transform:uppercase;display:block;margin-bottom:9px}
+  textarea{width:100%;min-height:150px;background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--txt);
+    font-family:var(--body);font-size:14.5px;padding:13px;resize:vertical;line-height:1.55}
+  textarea:focus{outline:2px solid var(--signal);outline-offset:1px}
+  .controls{display:flex;gap:10px;align-items:center;margin-top:13px;flex-wrap:wrap}
+  button.run{all:unset;cursor:pointer;background:var(--signal);color:#13181c;font-family:var(--disp);font-weight:600;font-size:14.5px;
+    padding:10px 22px;border-radius:8px;transition:.15s}
+  button.run:hover{filter:brightness(1.07)}
+  button.run:disabled{opacity:.5;cursor:default}
+  button.ghost{all:unset;cursor:pointer;font-family:var(--mono);font-size:12px;color:var(--mute);text-decoration:underline;text-underline-offset:3px}
+  .ex{font-family:var(--mono);font-size:11.5px;color:var(--inkmute);margin-top:9px}
+  .ex a{color:var(--deflt);cursor:pointer;text-decoration:underline}
+
+  /* image upload */
+  .drop{margin-top:12px;border:1px dashed rgba(255,255,255,.18);border-radius:8px;padding:13px;text-align:center;cursor:pointer;transition:.15s}
+  .drop:hover{border-color:rgba(240,168,56,.5);background:rgba(240,168,56,.04)}
+  .drop .dl{font-family:var(--mono);font-size:12px;color:var(--mute);letter-spacing:.03em}
+  .drop .dl b{color:var(--signal)}
+  .thumbs{display:flex;flex-wrap:wrap;gap:9px;margin-top:11px}
+  .thumb{position:relative;width:72px;height:72px;border-radius:7px;overflow:hidden;border:1px solid var(--line)}
+  .thumb img{width:100%;height:100%;object-fit:cover}
+  .thumb button{position:absolute;top:2px;right:2px;width:18px;height:18px;border:0;border-radius:4px;background:rgba(20,15,12,.8);color:#fff;font-size:12px;line-height:1;cursor:pointer}
+
+  .spin{display:inline-flex;align-items:center;gap:10px;color:var(--mute);font-family:var(--mono);font-size:12.5px;letter-spacing:.04em}
+  .ring{width:15px;height:15px;border:2px solid rgba(240,168,56,.3);border-top-color:var(--signal);border-radius:50%;animation:sp .7s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  /* manual form */
+  .manual{display:none;margin-top:14px;border-top:1px solid var(--line);padding-top:14px}
+  .manual.show{display:block}
+  .mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .mfield label{font-size:10px;margin-bottom:5px}
+  .mfield input,.mfield select{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:6px;color:var(--txt);font-family:var(--body);font-size:13px;padding:7px 9px}
+
+  /* pipeline (reused from demo) */
+  .pipe{margin:24px 0 0;border-left:2px solid var(--line)}
+  .stage{position:relative;padding:0 0 4px 26px;margin-bottom:17px;opacity:0;transform:translateY(8px);animation:rise .45s forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.stage{animation:none;opacity:1;transform:none}}
+  .stage::before{content:"";position:absolute;left:-7px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--panel);border:2px solid var(--mute)}
+  .stage.ok::before{border-color:var(--rule);background:var(--rule)}
+  .stage.warn::before{border-color:var(--flag);background:var(--flag)}
+  .stage h3{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin:0 0 9px;font-weight:500}
+  .stage .card{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:14px 16px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-family:var(--mono);font-size:12px;background:var(--panel3);border:1px solid var(--line);border-radius:6px;padding:5px 10px}
+  .chip b{color:var(--signal);font-weight:600}.chip.miss b{color:var(--flag)}
+  .note{font-size:13px;color:var(--mute);margin-top:8px}
+  .codeline{font-family:var(--mono);font-size:clamp(14px,2.3vw,18px);font-weight:600;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:15px;color:var(--mute);word-break:break-word;line-height:2}
+  .seg{padding:2px 5px;border-radius:4px;margin:0 1px;display:inline-block}
+  .seg.cust{color:#13181c;background:var(--signal)}.seg.def{color:#0e1417;background:var(--deflt)}.seg.rule{color:#0e1714;background:var(--rule)}.seg.prov{color:#1a0f0c;background:#b8742e}
+  .verdict{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:8px;font-size:13.5px;margin-bottom:9px}
+  .verdict:last-child{margin-bottom:0}
+  .verdict.pass{background:rgba(108,174,115,.10);border:1px solid rgba(108,174,115,.3)}
+  .verdict.flag{background:rgba(227,98,60,.10);border:1px solid rgba(227,98,60,.35)}
+  .verdict .ic{font-family:var(--mono);font-weight:600;font-size:11px;padding:3px 8px;border-radius:5px;white-space:nowrap;margin-top:1px}
+  .verdict.pass .ic{background:var(--rule);color:#0e1714}.verdict.flag .ic{background:var(--flag);color:#1a0f0c}
+  .verdict b{color:var(--txt)}
+  .q{font-size:13.5px;padding:6px 0 6px 18px;position:relative;border-bottom:1px solid var(--line)}
+  .q:last-child{border-bottom:0}
+  .q::before{content:"?";position:absolute;left:0;top:6px;font-family:var(--mono);color:var(--signal);font-weight:600}
+
+  .paper{background:var(--paper);color:var(--ink);border-radius:10px;padding:20px 22px;box-shadow:0 18px 40px -24px rgba(0,0,0,.7);margin-top:24px}
+  .paper .tag{display:inline-block;background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;padding:3px 10px;border-radius:4px;margin-bottom:12px}
+  .paper .bd{font-size:14px;white-space:pre-wrap}
+  .pnbox{display:flex;flex-direction:column;gap:4px;background:#e9e3d5;border:1px solid rgba(0,0,0,.14);border-radius:7px;padding:11px 14px;margin:14px 0 13px}
+  .pnlabel{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--inkmute)}
+  .pnval{font-family:var(--mono);font-weight:600;font-size:clamp(13px,2.5vw,15.5px);color:var(--ink);word-break:break-all}
+  .bk-title{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--inkmute);margin-bottom:9px}
+  .bk-row{display:grid;grid-template-columns:84px 1fr;gap:14px;padding:5px 0;border-bottom:1px solid rgba(0,0,0,.05)}
+  .bk-row:last-child{border-bottom:0}
+  .bk-code{font-family:var(--mono);font-weight:600;font-size:13px;color:var(--ink)}
+  .bk-def{font-size:13.5px;color:#3a4049}
+  .bk-code.prov,.bk-def.prov{color:#b8742e;font-style:italic}
+  .asmcomp{border:1px solid rgba(0,0,0,.12);border-radius:8px;padding:12px 14px;margin:12px 0;background:rgba(0,0,0,.02)}
+  .asmtitle{font-family:var(--disp);font-weight:600;font-size:14px;color:var(--ink);margin-bottom:8px}
+  .err{background:rgba(227,98,60,.1);border:1px solid rgba(227,98,60,.4);border-radius:8px;padding:13px 15px;font-size:13.5px;margin-top:14px}
+
+  .splitbanner{display:flex;gap:12px;align-items:flex-start;background:rgba(240,168,56,.08);border:1px solid rgba(240,168,56,.35);border-radius:9px;padding:13px 15px;margin:22px 0 4px;font-size:13.5px}
+  .splitbanner .ic{font-family:var(--mono);font-weight:600;font-size:11px;padding:3px 8px;border-radius:5px;background:var(--signal);color:#13181c;white-space:nowrap;margin-top:1px}
+  .itemblock{margin-top:8px}
+  .fbwrap{margin-top:14px;padding:14px 16px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}
+  .fblabel{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--signal);text-transform:uppercase;margin-bottom:8px}
+  .fbrow{display:flex;gap:8px}
+  .fbin{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:7px;color:var(--txt);font-family:var(--body);font-size:13.5px;padding:9px 11px}
+  .fbin:focus{outline:2px solid var(--signal);outline-offset:1px}
+  .fbbtn{all:unset;cursor:pointer;font-family:var(--disp);font-weight:600;font-size:13px;padding:9px 16px;border-radius:7px;background:var(--signal);color:#13181c}
+  .fblog{margin-top:10px;display:flex;flex-direction:column;gap:5px}
+  .fbline{font-size:12.5px;font-family:var(--mono);color:var(--mute);line-height:1.45}
+  .fbline.ok{color:var(--rule)} .fbline.ask{color:var(--signal)}
+  .fbyou{color:var(--txt);font-weight:600} .fbsys{color:var(--mute);font-weight:600}
+  .itemhead{display:flex;align-items:center;gap:11px;margin:26px 0 2px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+  .itemnum{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--signal)}
+  .itemlabel{font-family:var(--disp);font-weight:600;font-size:16px;color:var(--txt)}
+  footer{margin-top:28px;border-top:1px solid var(--line);padding-top:15px;color:var(--mute);font-size:12px;font-family:var(--mono);letter-spacing:.03em}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kick">Allied Instrumentation · Yokogawa AXG</p>
+    <h1>AXG quoting assistant</h1>
+    <p class="sub">Paste a customer email or jot the requirement — magnetic flowmeter (AXG) or pressure transmitter (EJA530E). Claude reads it; the verified engine applies your defaults, enforces the datasheet rules, runs the gates, and builds the model code + ERP part number. The model only reads the inquiry — every fact comes from the engine.</p>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--signal)"></i>From the inquiry</span>
+      <span><i class="dot" style="background:var(--deflt)"></i>Allied default</span>
+      <span><i class="dot" style="background:var(--rule)"></i>Forced by rule</span>
+      <span><i class="dot" style="background:#b8742e"></i>Provisional / confirm</span>
+    </div>
+  </header>
+
+  <div class="inputcard">
+    <label for="inq">Customer inquiry</label>
+    <textarea id="inq" placeholder="e.g. Need a 2-inch wafer mag, explosion proof, HART output, for a chemical line. 316 wetted parts fine.  — or attach a nameplate photo below."></textarea>
+
+    <div class="drop" id="drop" onclick="document.getElementById('imgInput').click()">
+      <div class="dl"><b>+ Add photos</b> — nameplate or spec sheet (you can also type text above)</div>
+    </div>
+    <input id="imgInput" type="file" accept="image/*" multiple style="display:none" onchange="addImages(this.files)">
+    <div class="thumbs" id="thumbs"></div>
+
+    <div class="controls">
+      <button class="run" id="runBtn" onclick="runFromText()">Build the quote</button>
+      <button class="ghost" onclick="toggleManual()">enter details manually</button>
+      <span id="status"></span>
+    </div>
+    <div class="ex">Try: <a onclick="fillEx(0)">Ottumwa basin (flow)</a> · <a onclick="fillEx(1)">2" XP wafer (flow)</a> · <a onclick="fillEx(2)">nitric acid (flow)</a> · <a onclick="fillEx(3)">pressure 0–100 psi</a> · <a onclick="fillEx(4)">multi-item RFQ</a></div>
+
+    <div class="manual" id="manual">
+      <div class="mgrid">
+        <div class="mfield"><label>Instrument</label><select id="m_inst" onchange="toggleInstFields()"><option value="flow">flow — AXG mag meter</option><option value="vortex">vortex — VY</option><option value="pressure">pressure — EJA530E</option><option value="valve">valve — quarter-turn</option></select></div>
+      </div>
+      <div class="mgrid" id="valveFields" style="margin-top:10px;display:none">
+        <div class="mfield"><label>Family</label><select id="vlv_fam"><option value="WKM">WKM butterfly</option><option value="FLOW-TEK">FLOW-TEK ball</option></select></div>
+        <div class="mfield"><label>Size (in)</label><input id="vlv_size" type="number" step="0.25" placeholder="6"></div>
+        <div class="mfield"><label>Body style (WKM)</label><select id="vlv_body"><option value="">lugged (default)</option><option value="lugged">lugged (B5123)</option><option value="wafer">wafer (B5120)</option></select></div>
+        <div class="mfield"><label>Package</label><select id="vlv_pkg"><option value="">digital (default)</option><option value="digital">digital (on/off)</option><option value="control">control (modulating)</option></select></div>
+        <div class="mfield"><label>Air pressure</label><select id="vlv_air"><option value="">80 psi (default)</option><option value="80psi">80 psi</option><option value="60psi">60 psi (Decatur)</option></select></div>
+        <div class="mfield"><label>Location/trim</label><select id="vlv_trim"><option value="">South Digital (default)</option><option value="south_digital">South Digital (TVF)</option><option value="loudon_tn">Loudon TN (NXL)</option><option value="decatur_il">Decatur IL (60psi)</option></select></div>
+        <div class="mfield"><label>Severe service</label><select id="vlv_sev"><option value="">standard</option><option value="dry_gas_or_slurry">dry gas / slurry</option><option value="low_temperature">low temp</option><option value="emergency_shutdown">ESD</option></select></div>
+      </div>
+      <div class="mgrid" id="vortexFields" style="margin-top:10px;display:none">
+        <div class="mfield"><label>Line size (in)</label><input id="v_size" type="number" step="0.1" placeholder="4"></div>
+        <div class="mfield"><label>Connection</label><select id="v_conn"><option value="">flanged (default)</option><option value="wafer">wafer</option><option value="flange">flange</option></select></div>
+        <div class="mfield"><label>Rating</label><select id="v_rating"><option value="">150# (default)</option><option>300</option><option>600</option></select></div>
+        <div class="mfield"><label>Fluid</label><input id="v_fluid" placeholder="steam / water / gas"></div>
+        <div class="mfield"><label>Flow (gpm)</label><input id="v_flow" type="number" placeholder=""></div>
+        <div class="mfield"><label>Steam pressure (psig)</label><input id="v_steamp" type="number" placeholder="for steam"></div>
+        <div class="mfield"><label>Viscosity (cSt)</label><input id="v_visc" type="number" step="0.1" placeholder="oil, e.g. 4"></div>
+        <div class="mfield"><label>Temp compensation</label><select id="v_temp"><option value="">default (general A)</option><option value="yes">yes (B temp sensor)</option><option value="no">no</option></select></div>
+        <div class="mfield"><label>Area</label><select id="v_area"><option value="">FF1 held (default)</option><option value="hazardous">hazardous (FF1)</option><option value="general_purpose">general purpose (001)</option></select></div>
+        <div class="mfield"><label>Mount</label><select id="v_mount"><option value="integral">integral</option><option value="remote">remote (3-part)</option></select></div>
+        <div class="mfield"><label>Cable length (m, remote)</label><input id="v_cable" type="number" placeholder="for remote only"></div>
+      </div>
+      <div class="mgrid" id="flowFields" style="margin-top:10px">
+        <div class="mfield"><label>Line size (in)</label><input id="m_size" type="number" step="0.1" placeholder="6"></div>
+        <div class="mfield"><label>Connection</label><select id="m_conn"><option value="">—</option><option>wafer</option><option>flange</option></select></div>
+        <div class="mfield"><label>Conductivity µS/cm</label><input id="m_cond" type="number" placeholder=""></div>
+        <div class="mfield"><label>Flow (gpm)</label><input id="m_flow" type="number" placeholder=""></div>
+        <div class="mfield"><label>Electrode</label><input id="m_elec" placeholder="316L"></div>
+        <div class="mfield"><label>Grounding rings</label><select id="m_gnd"><option value="">standard (rings)</option><option value="no">none</option></select></div>
+        <div class="mfield"><label>Power supply</label><select id="m_pwr"><option value="">standard (100–240 VAC)</option><option value="dc_24">24 VDC</option></select></div>
+        <div class="mfield"><label>Competitor brand</label><input id="m_cbrand" placeholder=""></div>
+        <div class="mfield"><label>Competitor model</label><input id="m_cmodel" placeholder=""></div>
+      </div>
+      <div class="mgrid" id="pressFields" style="margin-top:10px;display:none">
+        <div class="mfield"><label>Pressure span (psi)</label><input id="m_span" type="number" placeholder="100"></div>
+        <div class="mfield"><label>Connection</label><select id="m_pconn"><option value="">—</option><option value="female">1/2 NPT female</option><option value="male">1/2 NPT male</option></select></div>
+        <div class="mfield"><label>Mounting bracket</label><select id="m_brk"><option value="">—</option><option value="yes">yes</option><option value="no">no</option></select></div>
+      </div>
+      <div class="mgrid" style="margin-top:10px">
+        <div class="mfield"><label>Area</label><select id="m_area"><option value="">not stated</option><option value="hazardous">hazardous</option><option value="general_purpose">general purpose</option></select></div>
+        <div class="mfield"><label>Fluid</label><input id="m_fluid" placeholder="water"></div>
+        <div class="mfield"><label>Max temp (°C)</label><input id="m_temp" type="number" placeholder="66"></div>
+      </div>
+      <div class="controls"><button class="run" onclick="runFromManual()">Build from fields</button></div>
+    </div>
+  </div>
+
+  <div id="out"></div>
+  <footer>Draft for your review — confirm before sending or ordering. Codes &amp; dimensions come from verified data, never generated.</footer>
+</div>
+
+<script>
+/* ---------------- verified truth layer (subset) ---------------- */
+const SIZES=[
+ {mm:2.5,inch:0.1,code:'AXG002'},{mm:5,inch:0.2,code:'AXG005'},{mm:10,inch:0.4,code:'AXG010'},
+ {mm:15,inch:0.5,code:'AXG015'},{mm:25,inch:1,code:'AXG025'},{mm:32,inch:1.25,code:'AXG032'},
+ {mm:40,inch:1.5,code:'AXG040'},{mm:50,inch:2,code:'AXG050'},{mm:65,inch:2.5,code:'AXG065'},
+ {mm:80,inch:3,code:'AXG080'},{mm:100,inch:4,code:'AXG100'},{mm:125,inch:5,code:'AXG125'},
+ {mm:150,inch:6,code:'AXG150'},{mm:200,inch:8,code:'AXG200'},{mm:250,inch:10,code:'AXG250'},
+ {mm:300,inch:12,code:'AXG300'},{mm:350,inch:14,code:'AXG350'},{mm:400,inch:16,code:'AXG400'}];
+const DEF={lining:'A',elec:'L',gnd:'2',housing:'1',cable:'2',acc:'B',power:'-1',comm:'JA',wiring:'1',display:'1',opt:'/GRL'};
+const COND_FLOOR=[[2.5,10,5],[15,125,1],[150,400,3]];
+const WARN_BAND=10;
+const PERMEABLE=['nitric','hydrofluoric','sodium hydroxide','caustic','black liquor'];
+const FIELD_LABELS=['Size','Use','Constr','Explosion','Process Conn','Lining','Electrode','Grounding','Housing','Cable Entry','Accuracy','Power','Comm + I/O','Wiring','Display','Optional'];
+const ELEC_MAP=[['316l','L'],['316','L'],['stainless','L'],['hastelloy','H'],['nickel','H'],['tantalum','T'],['titanium','V'],['platinum','P'],['tungsten','W']];
+
+function condFloor(mm){for(const[a,b,f] of COND_FLOOR) if(mm>=a&&mm<=b) return f; return 3;}
+function resolveSize(spec){
+  let mm=spec.lineSizeMm;
+  if(!mm&&spec.lineSizeInch){const m=SIZES.find(s=>Math.abs(s.inch-spec.lineSizeInch)<0.05);mm=m?m.mm:spec.lineSizeInch*25;}
+  if(!mm) return null;
+  return SIZES.reduce((a,b)=>Math.abs(b.mm-mm)<Math.abs(a.mm-mm)?b:a);
+}
+
+/* ---------------- the engine ---------------- */
+function runEngine(spec){
+  const R={questions:[],gates:[],flags:[],provisional:false};
+  const sz=resolveSize(spec);
+  if(!sz){R.fatal='No line size found in the inquiry. Add the meter/line size (e.g. "2 inch") and try again.';return R;}
+  R.sz=sz;
+
+  // Use / Explosion — fail-safe -C unless explicitly general-purpose
+  let use,expl,useSrc,explSrc;
+  if(spec.areaClassification==='general_purpose'){use='-G';expl='000';useSrc=explSrc='cust';}
+  else if(spec.areaClassification==='hazardous'){use='-C';expl='FF2';useSrc=explSrc='cust';}
+  else {use='-C';expl='FF2';useSrc=explSrc='def';
+    R.questions.push('Confirm area classification — quoted explosion-proof (safe anywhere); say the word to down-spec to general-purpose.');}
+
+  // Connection
+  let conn, connSrc='def', connType=spec.connectionType;
+  const r300=(spec.connectionRating||'').includes('300');
+  if(connType==='flange'){conn=r300?'BA2':'BA1';connSrc=spec.connectionType?'cust':'def';}
+  else if(connType==='wafer'){conn=r300?'AA2':'AA1';connSrc='cust';}
+  else {conn='AA1';connSrc='def';R.provisional=true;
+    R.questions.push('Wafer or flanged connection? (defaulted to ASME 150 wafer — confirm)');}
+  // size-vs-connection validity
+  if((conn[0]==='A')&&sz.mm>200){R.flags.push({t:'flag',ic:'CONNECTION',d:`Wafer isn't available above 8" (200 mm). For ${sz.inch}" use a flanged connection (BA1).`});conn='BA1';}
+  if(conn==='BA1'&&sz.mm>300){R.flags.push({t:'flag',ic:'CONNECTION',d:`ASME 150 flange (BA1) covers to 12" (300 mm); ${sz.inch}" needs a different connection code — confirm.`});R.provisional=true;}
+
+  // Electrode
+  let elec=DEF.elec, elecSrc='def';
+  if(spec.electrodeMaterial){const m=ELEC_MAP.find(([k])=>spec.electrodeMaterial.toLowerCase().includes(k));if(m){elec=m[1];elecSrc='cust';}}
+
+  // Grounding rings — DEFAULT ON (device code 2 + /GRL optional), overridable to remove
+  let gnd, gndSrc='def', wantRings=true;
+  if(spec.groundingRings==='no'){ gnd='1'; wantRings=false; gndSrc='cust'; }
+  else { gnd='2'; wantRings=true; if(spec.groundingRings==='yes') gndSrc='cust'; }
+
+  // Power supply — DEFAULT -1 (100-240 V), overridable to -2 (24 V DC)
+  let power=DEF.power, powerSrc='def';
+  if(spec.powerSupply==='dc_24'){ power='-2'; powerSrc='cust'; }
+
+  // Optional codes
+  let opt=[];
+  if(wantRings) opt.push('/GRL');
+  if(spec.isAbrasiveOrSlurry) opt.push('/HF2');
+
+  // assemble 16 positions
+  const code=[sz.code,use,'A',expl,conn,'A',elec,gnd,DEF.housing,DEF.cable,DEF.acc,power,DEF.comm,DEF.wiring,DEF.display,opt.join(' ')];
+  const src =['cust',useSrc,'def',explSrc,connSrc,'def',elecSrc,gndSrc,'def','def','def',powerSrc,'def','def','def','def'];
+  // mark provisional electrode if compatibility unresolved (set later)
+  R.code=code;R.src=src;
+
+  /* --- sizing / velocity --- */
+  if(spec.flowGpm){
+    const v=+(0.4085*spec.flowGpm/(sz.inch*sz.inch)).toFixed(1);
+    if(spec.isAbrasiveOrSlurry&&v>7){
+      const bigger=SIZES.find(s=>s.mm>sz.mm);
+      const vb=bigger?+(0.4085*spec.flowGpm/(bigger.inch*bigger.inch)).toFixed(1):null;
+      R.gates.push({t:'flag',ic:'VELOCITY',d:`At ${spec.flowGpm} gpm, ${sz.inch}" runs <b>${v} ft/s</b> — high for abrasive service (liner/electrode wear).`+(bigger?` Going up to ${bigger.inch}" gives <b>${vb} ft/s</b>; consider the larger line.`:'')});
+    } else {
+      R.gates.push({t:'pass',ic:'VELOCITY',d:`At ${spec.flowGpm} gpm, ${sz.inch}" runs <b>${v} ft/s</b> — within range.`});
+    }
+  }
+
+  /* --- conductivity gate --- */
+  const floor=condFloor(sz.mm);
+  if(spec.conductivityuScm!=null){
+    if(spec.conductivityuScm<floor) R.gates.push({t:'flag',ic:'CONDUCTIVITY · STOP',d:`${spec.conductivityuScm} µS/cm is below the ${floor} µS/cm floor for ${sz.inch}" — a mag meter won't measure it. Escalate / consider another technology.`});
+    else if(spec.conductivityuScm<WARN_BAND) R.gates.push({t:'flag',ic:'CONDUCTIVITY · CAUTION',d:`${spec.conductivityuScm} µS/cm is below the 10 µS/cm caution band — low-conductivity handling applies. Flag for review.`});
+    else R.gates.push({t:'pass',ic:'CONDUCTIVITY',d:`${spec.conductivityuScm} µS/cm — above the ${floor} µS/cm floor and the 10 µS/cm band.`});
+  } else {
+    R.questions.push('Fluid conductivity (µS/cm)? — confirms the meter can measure this fluid.');
+  }
+
+  /* --- compatibility gate --- */
+  const fluid=(spec.fluid||'').toLowerCase();
+  const permeable=PERMEABLE.some(p=>fluid.includes(p));
+  if(!spec.fluid){
+    R.gates.push({t:'flag',ic:'COMPATIBILITY · ASK',d:'Fluid not named — the wetted-materials check (electrode, lining, ring) can\'t run. Must ask before confirming materials.'});
+    R.provisional=true;
+  } else if(permeable){
+    R.gates.push({t:'flag',ic:'COMPATIBILITY · ESCALATE',d:`${spec.fluid} is permeable/aggressive. 316L must be verified against the chemical-resistance reference — not auto-quoted. Recommend Vent Hole <b>/H</b>, acid gasket <b>/GC</b>; block electrode-type & built-in grounding. Route to engineering.`});
+    R.code[6]=R.code[6]+'*';R.src[6]='prov';R.provisional=true;
+    if(!opt.includes('/H')){R.code[15]=(R.code[15]+' /H').trim();}
+  } else if(spec.temperatureMaxC==null){
+    R.gates.push({t:'flag',ic:'COMPATIBILITY · ASK',d:`${spec.fluid} is likely fine with 316L/PFA at ambient, but process temperature wasn't stated — compatibility is temperature-dependent, so confirm before locking materials.`});
+    R.questions.push('Process (fluid) temperature, including maximum?');
+  } else {
+    R.gates.push({t:'pass',ic:'COMPATIBILITY',d:`${spec.fluid} with 316L/PFA at up to ${spec.temperatureMaxC} °C — generally compatible. (Confirm against resistance data for anything aggressive.)`});
+  }
+
+  /* --- retrofit --- */
+  if(spec.competitorBrand){
+    R.flags.push({t:'flag',ic:'RETROFIT',d:`Replacing ${spec.competitorBrand}${spec.competitorModel?' '+spec.competitorModel:''} — confirm the AXG lay length fits the existing spool before promising a drop-in.`});
+  }
+
+  /* --- standard open questions --- */
+  if(!spec.outputType) R.questions.push('Output / signal type — 4-20 mA + HART? Pulse output for totalizing?');
+  if(!spec.mountType) R.questions.push('Integral-mount or remote-mount transmitter?');
+
+  /* --- nameplate: legacy model + low-confidence handling --- */
+  if(spec.existingModel){
+    const m=spec.existingModel.toUpperCase();
+    if(spec.isLegacyModel || /AXF/.test(m)){
+      R.flags.unshift({t:'flag',ic:'SUPERSESSION',d:`Photo shows an existing <b>${spec.existingModel}</b> — a previous-generation unit. Modern equivalent is the AXG built above. ${/AXF/.test(m)?'(AXF → AXG is a known supersession; map old suffix codes to new before quoting.)':'Confirm the current-model mapping before quoting.'}`});
+    } else {
+      R.flags.unshift({t:'pass',ic:'EXISTING UNIT',d:`Photo identifies an existing <b>${spec.existingModel}</b>.`});
+    }
+  }
+  if(spec.lowConfidence && spec.lowConfidence.length){
+    R.provisional=true;
+    R.flags.push({t:'flag',ic:'NAMEPLATE · CONFIRM',d:'Some characters on the photo were not clearly legible: '+spec.lowConfidence.join('; ')+'. Confirm these from a cleaner photo or the order record before quoting — not guessed.'});
+  }
+  if(spec.notes) R.note=spec.notes;
+
+  R.partNumber=R.code.map(v=>v.includes('*')?'[#]':v).join('').replace(/\s+/g,'');
+  R.instrument='AXG magnetic flowmeter';
+  R.headerChips=[
+    {k:'size',v:R.sz.inch+'" ('+R.sz.mm+'mm)'},
+    {k:'connection',v:spec.connectionType},
+    {k:'area',v:spec.areaClassification?spec.areaClassification.replace('_',' '):'not stated'},
+    {k:'fluid',v:spec.fluid},
+    {k:'temp',v:spec.temperatureMaxC!=null?spec.temperatureMaxC+'°C':''},
+    {k:'conductivity',v:spec.conductivityuScm!=null?spec.conductivityuScm+' µS/cm':''},
+    {k:'flow',v:spec.flowGpm?spec.flowGpm+' gpm':''},
+    {k:'output',v:spec.outputType},
+    {k:'electrode',v:spec.electrodeMaterial}
+  ];
+  if(spec.competitorBrand) R.headerChips.push({k:'replacing',v:spec.competitorBrand+(spec.competitorModel?' '+spec.competitorModel:'')});
+  if(spec.existingModel) R.headerChips.push({k:'existing unit',v:spec.existingModel});
+  R.breakdown=[];
+  R.code.forEach((val,idx)=>{
+    if(idx===15){val.trim().split(/\s+/).forEach(code=>{if(code)R.breakdown.push({code,def:OPT_DEF[code]||'Optional specification',prov:false});});return;}
+    R.breakdown.push({code:val.replace('*',''),def:defOf(idx,val,R.sz),prov:val.includes('*')});
+  });
+  return R;
+}
+
+/* ---------------- rendering ---------------- */
+function el(t,c,h){const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;}
+let delay=0;
+function stage(p,cls,title,fn){const s=el('div','stage '+(cls||''));s.style.animationDelay=delay+'ms';delay+=120;s.appendChild(el('h3',null,title));const c=el('div','card');fn(c);s.appendChild(c);p.appendChild(s);}
+
+function defOf(idx,v,sz){const x=v.replace('*','').trim();switch(idx){
+  case 0:return sz.inch+' inch ('+sz.mm+' mm) line size';
+  case 1:return x==='-C'?'Explosion-proof construction (FM rated; safe in any area)':'General-purpose construction';
+  case 2:return 'Integral mount (transmitter on the meter)';
+  case 3:return x==='FF2'?'FM flameproof certification':'No explosion certification (general-purpose)';
+  case 4:return x[0]==='B'?'ASME Class 150 flanged connection, 316 stainless':'ASME Class 150 wafer connection, 316 stainless';
+  case 5:return 'PFA liner (chemical- and abrasion-resistant)';
+  case 6:return x===''?'Electrode material — to be confirmed (pending materials review)':({L:'316L stainless steel electrodes',H:'Nickel alloy electrodes',T:'Tantalum electrodes',V:'Titanium electrodes',P:'Platinum-iridium electrodes',W:'Tungsten carbide electrodes'}[x]||'Electrodes');
+  case 7:return x==='1'?'No grounding device':'Grounding rings included';case 8:return 'Standard housing and coating';
+  case 9:return '1/2" NPT conduit entry';case 10:return 'Standard accuracy';case 11:return x==='-2'?'24 V AC/DC power':'100–240 VAC power';
+  case 12:return 'HART communication + 4–20 mA output';case 13:return 'Screw-type wiring terminals';case 14:return 'Display, English';
+}}
+const OPT_DEF={'/GRL':'316L grounding rings (matched to the electrodes)','/HF2':'Enhanced dual-frequency excitation (for slurry / noisy fluids)','/H':'Vent hole (for permeable fluids)'};
+
+/* ================= EJA530E pressure transmitter ================= */
+const CAPSULES=[
+  {code:'A',minPsi:1.45,maxPsi:29,stocked:true,desc:'10–200 kPa (1.45–29 psi)'},
+  {code:'B',minPsi:2.9,maxPsi:290,stocked:true,desc:'0.02–2 MPa (2.9–290 psi)'},
+  {code:'C',minPsi:14.5,maxPsi:1450,stocked:true,desc:'0.1–10 MPa (14.5–1450 psi)'},
+  {code:'D',minPsi:72.5,maxPsi:7200,stocked:false,desc:'0.5–50 MPa (72.5–7200 psi) — per order'}
+];
+const EJA_DEF={output:'J',wetted:'S',amp:'1',elec:'2',indicator:'E',bracket:'L',explosion:'/FU1'};
+function selectCapsule(spanPsi){
+  const fit=CAPSULES.filter(c=>spanPsi>=c.minPsi&&spanPsi<=c.maxPsi);
+  if(!fit.length){
+    if(spanPsi<CAPSULES[0].minPsi) return {err:`Required span ${spanPsi} psi is below the smallest capsule minimum (1.45 psi). Confirm the range — this may need a different transmitter.`};
+    return {err:`Required span ${spanPsi} psi exceeds the largest capsule (7200 psi). Confirm the range / consider a high-pressure model.`};
+  }
+  const stocked=fit.filter(c=>c.stocked);
+  const pick=(stocked.length?stocked:fit).reduce((a,b)=>a.maxPsi<b.maxPsi?a:b);
+  return {cap:pick,turndown:+(pick.maxPsi/spanPsi).toFixed(1),perOrder:!pick.stocked};
+}
+function runEJA(spec){
+  const R={questions:[],gates:[],flags:[],provisional:false};
+  // explosion (override-only fail-safe, EJA analog of AXG -C)
+  let expl=EJA_DEF.explosion, explSrc='def';
+  if(spec.areaClassification==='general_purpose'){expl='';explSrc='cust';}
+  else if(spec.areaClassification==null){R.questions.push('Confirm area — quoted /FU1 explosion-protected (FM explosionproof + intrinsically safe; safe anywhere). Say the word to down-spec to general-purpose.');}
+  // capsule + calibration from required span (the range/span module)
+  let cap, cs, cal, calNote, perOrderFlag=null, turndownFlag=null;
+  if(spec.requiredSpanPsi==null){
+    // No range stated -> default to standard capsule B, calibrated to its full span (0 / 145 / 290)
+    cap='B';
+    const capB=CAPSULES.find(c=>c.code==='B');
+    cal={zero:0, mid:capB.maxPsi/2, full:capB.maxPsi};
+    calNote='no range stated';
+    R.gates.push({t:'pass',ic:'RANGE / SPAN',d:`No range given — defaulting to standard capsule <b>B</b>, calibrated to full span <b>0 / ${cal.mid} / ${cal.full} psi</b> (field-rerangeable later).`});
+    R.questions.push('Calibrated range — defaulted to capsule B full span (0–290 psi). If the customer has a specific range, give it and the unit ships calibrated to it.');
+  } else {
+    cs=selectCapsule(spec.requiredSpanPsi);
+    if(cs.err){R.fatal=cs.err;return R;}
+    cap=cs.cap.code;
+    cal={zero:0, mid:+(spec.requiredSpanPsi/2).toFixed(2), full:spec.requiredSpanPsi};
+    calNote='customer-stated range';
+    if(cs.perOrder) R.flags.push({t:'flag',ic:'CAPSULE · PER-ORDER',d:`Capsule ${cap} covers ${cs.cap.desc.split('—')[0].trim()} but isn't a stocked range (A/B/C) — expect a longer lead time.`});
+    if(cs.turndown>10) R.flags.push({t:'flag',ic:'TURNDOWN',d:`Calibrated span gives a ${cs.turndown}:1 turndown — accuracy degrades at high turndown. Confirm acceptable, or a smaller capsule if the range allows.`});
+    R.gates.push({t:'pass',ic:'RANGE / SPAN',d:`Required span ${spec.requiredSpanPsi} psi fits capsule <b>${cap}</b> (${cs.cap.desc.split('—')[0].trim()}), turndown ${cs.turndown}:1.`});
+    R.gates.push({t:'pass',ic:'CALIBRATION',d:`Unit ships factory-calibrated to the stated range: <b>0 / ${cal.mid} / ${cal.full} psi</b> (3-point).`});
+  }
+  R.calibration=cal; R.calNote=calNote;
+  // customer-driven variables
+  const conn=spec.pressureConnection==='male'?'7':'4';
+  const connSrc=spec.pressureConnection?'cust':'def';
+  const bracket=spec.bracket==='no'?'N':'L';
+  // wetted compatibility note (process connector + diaphragm)
+  if(spec.fluid){
+    const f=spec.fluid.toLowerCase();
+    const aggressive=['hydrochloric','sulfuric','hydrogen sulfide','sodium hypochlorite','steam'].some(x=>f.includes(x));
+    if(aggressive) R.gates.push({t:'flag',ic:'COMPATIBILITY · ESCALATE',d:`${spec.fluid} is on Yokogawa's caution list for wetted parts — verify the 316L/Hastelloy diaphragm against chemical-resistance data before quoting. Route to engineering.`});
+    else R.gates.push({t:'pass',ic:'COMPATIBILITY',d:`${spec.fluid} — confirm against resistance data for anything aggressive; 316L/Hastelloy wetted parts generally suitable.`});
+  }
+  // assemble code  EJA530E - J cap S conn N - 0 1 2 E L /FU1 /D1
+  // /D1 = psi calibration units (Allied standard stock; the calibration is always in psi to match)
+  const calUnit='/D1';
+  R.code=['EJA530E','-'+EJA_DEF.output,cap,EJA_DEF.wetted,conn,'N','-0',EJA_DEF.amp,EJA_DEF.elec,EJA_DEF.indicator,bracket].concat(expl?[expl]:[]).concat([calUnit]);
+  R.src =['cust','def','cust','def',connSrc,'def','def','def','def','def',(bracket==='L'?'def':'cust')].concat(expl?[explSrc]:[]).concat(['def']);
+  R.partNumber=`EJA530E-${EJA_DEF.output}${cap}${EJA_DEF.wetted}${conn}N-0${EJA_DEF.amp}${EJA_DEF.elec}${EJA_DEF.indicator}${bracket}${expl}${calUnit}`;
+  if(!spec.outputType) R.questions.push('Output — HART (our standard J), or another protocol?');
+  R.questions.push('Confirm process connection (1/2 NPT female 4 / male 7) and whether a mounting bracket is needed.');
+  // header + breakdown
+  R.instrument='EJA530E gauge pressure transmitter';
+  R.headerChips=[
+    {k:'pressure range',v:spec.requiredSpanPsi?('0–'+spec.requiredSpanPsi+' psi'):'not stated'},
+    {k:'calibrated',v:'0 / '+R.calibration.mid+' / '+R.calibration.full+' psi'},
+    {k:'capsule',v:cap},
+    {k:'area',v:spec.areaClassification?spec.areaClassification.replace('_',' '):'not stated'},
+    {k:'fluid',v:spec.fluid},
+    {k:'connection',v:spec.pressureConnection},
+    {k:'output',v:spec.outputType}
+  ];
+  if(spec.existingModel) R.headerChips.push({k:'existing unit',v:spec.existingModel});
+  const capDesc=CAPSULES.find(c=>c.code===cap).desc.split('—')[0].trim();
+  const ejaDef={'-J':'HART communication + 4–20 mA output',[cap]:'Capsule '+cap+' — '+capDesc+' measurement range','S':'316L process connector & wetted parts, Hastelloy C-276 diaphragm','4':'1/2 NPT female process connection','7':'1/2 NPT male process connection','N':'(fixed)','-0':'(fixed)','1':'Cast aluminum housing','2':'1/2 NPT, dual electrical connection (explosion-ready)','E':'Digital indicator with range-setting buttons','L':'316 SST 2-inch pipe mounting bracket','/FU1':'FM explosion-proof + intrinsically safe (combined approval)','/D1':'Calibration in psi (Allied standard)'};
+  R.breakdown=R.code.map((v,i)=>{
+    if(i===0) return {code:v,def:'Gauge pressure transmitter',prov:false};
+    return {code:v,def:ejaDef[v]||'—',prov:false};
+  });
+  // calibration deliverable line on the quote
+  R.breakdown.push({code:'CAL', def:`Factory-calibrated 0 / ${R.calibration.mid} / ${R.calibration.full} psi (3-point) — ${R.calNote}`, prov:false});
+  return R;
+}
+
+/* ================= VY vortex flowmeter ================= */
+const VY_SIZES=[ // inch -> size code
+  {inch:0.5,code:'VY015'},{inch:1,code:'VY025'},{inch:1.5,code:'VY040'},{inch:2,code:'VY050'},
+  {inch:3,code:'VY080'},{inch:4,code:'VY100'},{inch:6,code:'VY150'},{inch:8,code:'VY200'},
+  {inch:10,code:'VY250'},{inch:12,code:'VY300'},{inch:16,code:'VY400'}
+];
+// Allied confirmed standard build (from inventory): VY[size]-FF1-0ABLBBA1-12JA100
+const VY_DEF={cert:'FF1',body:'0',shedder:'A',material:'BL',conn:'BBA1',housing:'1',cable:'2',comm:'JA',display:'1'};
+const VY_CONN={flange:'BBA1',wafer:'BAA1'}; // ASME 150 default; rating drives the digit
+function vySizeFromInch(inch){
+  if(inch==null) return null;
+  return VY_SIZES.reduce((b,s)=>Math.abs(s.inch-inch)<Math.abs(b.inch-inch)?s:b);
+}
+function vyConn(spec){
+  // default flanged ASME150 BBA1; wafer alternative BAA1; rating shifts last digit (150->1,300->2,600->4)
+  const wafer = spec.connectionType==='wafer';
+  let base = wafer ? 'BAA' : 'BBA';
+  let dig='1', src='def';
+  if(spec.connectionRating){
+    const r=String(spec.connectionRating);
+    if(r.includes('300')){dig='2';src='cust';} else if(r.includes('600')){dig='4';src='cust';}
+    else if(r.includes('150')){dig='1';src='cust';}
+  }
+  if(spec.connectionType) src='cust';
+  return {code:base+dig, src};
+}
+function vyShedder(spec){
+  // default A (general). Escalate to B (temp sensor) on steam / mass / energy signals — ASK, don't auto-pick.
+  const f=(spec.fluid||'').toLowerCase();
+  const notes=(spec.notes||'').toLowerCase();
+  const steam = f.includes('steam') || notes.includes('mass flow')||notes.includes('energy flow')||notes.includes('temperature comp');
+  if(spec.tempCompensated==='yes') return {code:'B', src:'cust', ask:false};
+  if(spec.tempCompensated==='no') return {code:'A', src:'cust', ask:false};
+  if(steam) return {code:'A', src:'def', ask:true, askReason:'steam / mass-or-energy flow'};
+  return {code:'A', src:'def', ask:false};
+}
+function vyCert(spec){
+  // FF1 override-only fail-safe (like AXG -C / EJA /FU1). Drop to 001 only if explicitly general-purpose.
+  if(spec.areaClassification==='general_purpose') return {code:'001', src:'cust'};
+  return {code:'FF1', src:(spec.areaClassification==='hazardous'?'cust':'def')};
+}
+// Saturated steam density (lb/ft3) by gauge pressure (psig) — standard steam-table values,
+// cross-checked vs ideal-gas (ratio 1.01-1.13 = correct steam non-ideality). Interpolated.
+const STEAM_RHO=[[0,0.0373],[15,0.0728],[30,0.1076],[50,0.1496],[75,0.2014],[100,0.2580],[125,0.3096],[150,0.3636],[200,0.4694],[250,0.5746],[300,0.6796]];
+function steamDensity(psig){
+  if(psig<=STEAM_RHO[0][0]) return STEAM_RHO[0][1];
+  if(psig>=STEAM_RHO[STEAM_RHO.length-1][0]) return STEAM_RHO[STEAM_RHO.length-1][1];
+  for(let i=1;i<STEAM_RHO.length;i++){
+    if(psig<=STEAM_RHO[i][0]){
+      const [p0,r0]=STEAM_RHO[i-1],[p1,r1]=STEAM_RHO[i];
+      return r0+(r1-r0)*(psig-p0)/(p1-p0);
+    }
+  }
+}
+// Velocity floors CALIBRATED to two real Yokogawa VY sizing outputs (2026-06-22):
+//   Liquid (water/condensate, ~1000 kg/m3): min velocity 0.305 m/s = 1.0 ft/s  [mechanical floor]
+//   Steam (150 psig, 5.81 kg/m3):           min velocity 2.32 m/s  = 7.61 ft/s [signal floor]
+// A single rho*v^2 law does NOT fit both -> two regimes: a fixed liquid mechanical floor, and a
+// density-dependent signal floor for gas/steam. v_min = max(0.305 m/s, sqrt(31.3/rho)).
+const VFLOOR_LIQUID_FTS=1.0;      // 0.305 m/s — Yokogawa-verified liquid floor
+const RHOV2_K=31.3;                // Pa, gas/steam signal floor (Yokogawa steam-calibrated)
+const LIQ_FLOOR_MS=0.305;
+function steamVfloorFts(rho_lbft3){
+  const rho_kg=rho_lbft3/0.062428;
+  const v_ms=Math.max(LIQ_FLOOR_MS, Math.sqrt(RHOV2_K/rho_kg)); // max(mechanical, signal)
+  return v_ms*3.28084;
+}
+function vyLowFlow(spec){
+  const inch=spec.lineSizeInch!=null?spec.lineSizeInch:(spec.lineSizeMm!=null?spec.lineSizeMm/25.4:null);
+  if(inch==null) return null;
+  const A=Math.PI/4*Math.pow(inch/12,2); // ft2 (nominal bore)
+  const f=(spec.fluid||'').toLowerCase();
+  const isSteam=f.includes('steam');
+  const isCondensate=f.includes('condensate');
+  const isOil=f.includes('oil');
+  const out={fluid:spec.fluid||'(unspecified)', basis:'screening', notes:[]};
+  if(isSteam){
+    const psig=spec.steamPressurePsig;
+    if(psig!=null){
+      const rho=steamDensity(psig);
+      const vmin=steamVfloorFts(rho);
+      const m_lbhr=rho*vmin*A*3600;
+      out.massCutoff='~'+Math.round(m_lbhr/10)*10+' lb/hr minimum (saturated steam '+psig+' psig, density '+rho.toFixed(3)+' lb/ft3, min velocity '+vmin.toFixed(1)+' ft/s)';
+      out.headline='Below ~'+(Math.round(m_lbhr/10)*10)+' lb/hr this size may not read reliably.';
+      out.notes.push('Steam velocity floor '+vmin.toFixed(1)+' ft/s from rho*v\u00b2 signal model, calibrated to a Yokogawa VY sizing output (150 psig). Flow cutoff is ~\u00b125% (nominal vs actual bore) \u2014 the velocity floor is the firmer figure.');
+    } else {
+      const vmin=steamVfloorFts(0.2580); // assume ~100psig if unknown, just for a volumetric figure
+      const q_acfm=vmin*A*60;
+      out.volumetric='~'+q_acfm.toFixed(0)+' ACFM (rough, assumes ~100 psig)';
+      out.headline='Give steam pressure for a real lb/hr cutoff.';
+      out.notes.push('Saturated-steam pressure (psig) sets density AND the velocity floor (lower pressure -> higher floor) \u2014 needed for a real cutoff.');
+    }
+  } else {
+    // liquid: condensate or low-viscosity hot oil
+    const vmin=VFLOOR_LIQUID_FTS;
+    const q_gpm=vmin*A*448.831;
+    out.volumetric='~'+q_gpm.toFixed(0)+' gpm minimum';
+    out.headline='Below ~'+q_gpm.toFixed(0)+' gpm the meter may not read reliably.';
+    out.notes.push('Liquid velocity floor '+VFLOOR_LIQUID_FTS+' ft/s (~1 m/s) screening rule-of-thumb.');
+    // Reynolds backstop for viscous edge (hot oil 3-5 cSt)
+    if(isOil){
+      const nu_cst=spec.viscosityCst||4; // your stated 3-5 cSt typical
+      const nu=nu_cst*1e-6, D=inch*0.0254, V=vmin*0.3048;
+      const Re=V*D/nu;
+      if(Re<10000) out.notes.push('Reynolds backstop: at the velocity floor Re~'+Math.round(Re)+' (<10000) for '+nu_cst+' cSt oil on this size — low-flow may be Reynolds-limited; confirm in sizing tool.');
+      else out.notes.push('Reynolds backstop: Re well above floor at '+nu_cst+' cSt — velocity floor governs (not Reynolds).');
+    }
+  }
+  // sanity-check stated flow against the cutoff
+  if(spec.flowGpm!=null && !isSteam){
+    const vmin=VFLOOR_LIQUID_FTS, q_gpm=vmin*A*448.831;
+    if(spec.flowGpm < q_gpm) out.warn='STATED FLOW '+spec.flowGpm+' gpm is BELOW the ~'+q_gpm.toFixed(0)+' gpm screening floor — this meter is likely OVERSIZED for the flow. Consider a smaller line/meter.';
+  }
+  return out;
+}
+function vyLowFlowSlot(R, spec){
+  const lf=vyLowFlow(spec);
+  R.gates=R.gates||[];
+  if(!lf){
+    R.gates.push({t:'flag',ic:'LOW-FLOW',d:'Give line size and fluid to estimate the low-flow cutoff.'});
+    return;
+  }
+  R.computed={type:'low_flow', status:'screening', data:lf};
+  let d=(lf.headline||'')+' ';
+  if(lf.massCutoff) d+='<b>'+lf.massCutoff+'</b>. ';
+  else if(lf.volumetric) d+='<b>'+lf.volumetric+'</b>. ';
+  d+='<span style="opacity:.8">'+lf.notes.join(' ')+'</span>';
+  const t = lf.warn ? 'flag' : 'pass';
+  R.gates.push({t:t,ic:'LOW-FLOW · SCREENING',d:(lf.warn?'<b style="color:var(--flag)">'+lf.warn+'</b> ':'')+d+' <i>Screening estimate — verify in Yokogawa\u2019s sizing tool.</i>'});
+}
+function vyBuildUnit(spec, sz, opts){
+  // assemble one VY[size] code. opts.display: '1' integral, 'N' remote sensor
+  const cert=vyCert(spec), conn=vyConn(spec), shed=vyShedder(spec);
+  const display=opts.display;
+  const code=[sz.code,'-'+cert.code,VY_DEF.body,shed.code,VY_DEF.material,conn.code,'-'+VY_DEF.housing,VY_DEF.cable,VY_DEF.comm,display,'00'];
+  const src =['cust',cert.src,'def',shed.src,'def',conn.src,'def','def','def',(display===VY_DEF.display?'def':'cust'),'def'];
+  const partNumber=`${sz.code}-${cert.code}-${VY_DEF.body}${shed.code}${VY_DEF.material}${conn.code}-${VY_DEF.housing}${VY_DEF.cable}${VY_DEF.comm}${display}00`;
+  const vyDef={
+    [sz.code]:`${sz.inch}" (${VY_SIZES.find(s=>s.code===sz.code).inch===sz.inch?'':''}DN) vortex flow tube`,
+    ['-'+cert.code]: cert.code==='FF1'?'FM explosionproof (dual-seal) — Allied fail-safe default':'Non-Ex, CE marking',
+    '0':'General body type',
+    [shed.code]: shed.code==='B'?'General shedder bar WITH built-in temperature sensor (mass/energy flow)':'General shedder bar',
+    'BL':'Body CF8M / shedder Duplex 1.4517 (316-class stainless)',
+    [conn.code]: (spec.connectionType==='wafer'?'Wafer':'Flanged')+' process connection, ASME '+( {1:'150',2:'300',4:'600'}[conn.code.slice(-1)]||'150')+'#',
+    '-1':'Standard material, standard coating',
+    '2':'ASME 1/2" NPT cable entry, one connection',
+    'JA':'HART 7, 4–20 mA, pulse/status output',
+    [display]: display==='1'?'With 2-line LCD display + config buttons':'No display (remote sensor — display on transmitter)',
+    '00':'(fixed)'
+  };
+  const breakdown=code.map(v=>({code:v.replace('*',''),def:vyDef[v]||'—',prov:false}));
+  return {code,src,partNumber,breakdown,shedAsk:shed.ask,shedReason:shed.askReason,cert};
+}
+function runVY(spec){
+  const R={instrument:'VY vortex flowmeter',gates:[],flags:[],questions:[]};
+  const inch=spec.lineSizeInch!=null?spec.lineSizeInch:(spec.lineSizeMm!=null?spec.lineSizeMm/25.4:null);
+  const sz=vySizeFromInch(inch);
+  if(!sz){R.fatal='No line size found. Give the line size (e.g. 2-inch / DN50) so the VY size code can be set.';return R;}
+
+  R.headerChips=[
+    {k:'line size',v:sz.inch+'" ('+sz.code+')'},
+    {k:'mount',v:spec.mountType==='remote'?'remote (3-part assembly)':'integral'},
+    {k:'area',v:spec.areaClassification?spec.areaClassification.replace('_',' '):'not stated (FF1 held)'},
+    {k:'fluid',v:spec.fluid||'not stated'},
+    {k:'flow',v:spec.flowGpm?spec.flowGpm+' gpm':'not stated'},
+    {k:'connection',v:spec.connectionType||'flanged (default)'}
+  ];
+
+  // wetted-parts gate (same aggressive-fluid list as the datasheet *4)
+  if(spec.fluid){
+    const f=spec.fluid.toLowerCase();
+    const aggressive=['hydrochloric','sulfuric','hydrogen sulfide','sodium hypochlorite'].some(x=>f.includes(x)) || (f.includes('steam')&&(spec.temperatureMaxC||0)>=150);
+    if(aggressive) R.gates.push({t:'flag',ic:'WETTED PARTS · ESCALATE',d:`${spec.fluid} is on Yokogawa's caution list (datasheet *4) for the CF8M/Duplex wetted parts — verify material against chemical-resistance data or consider nickel-alloy (HH/BH). Route to engineering.`});
+    else R.gates.push({t:'pass',ic:'WETTED PARTS',d:`${spec.fluid} — standard CF8M body / Duplex shedder generally suitable; confirm for anything aggressive.`});
+  }
+
+  // computed low-flow seam (currently unavailable)
+  vyLowFlowSlot(R, spec);
+
+  if(spec.mountType==='remote'){
+    // ---- REMOTE: 3-item assembly (sensor + VY4A transmitter + VY1C cable) ----
+    R.assemblyNote='Remote installation = THREE line items. Cross-component rules below are REASONED from the datasheet, not verified against a stocked remote build — confirm before quoting.';
+    const sensor=vyBuildUnit(spec, sz, {display:'N'});
+    // VY4A remote transmitter — cert & comm must match the sensor
+    const tx={
+      title:'Remote transmitter (VY4A)',
+      partNumber:`VY4A-${sensor.cert.code}-1${VY_DEF.cable}${VY_DEF.comm}100`,
+      breakdown:[
+        {code:'VY4A',def:'Vortex remote transmitter',prov:false},
+        {code:'-'+sensor.cert.code,def:'Certification — MUST match the sensor ('+sensor.cert.code+')',prov:true},
+        {code:'1',def:'Standard coating',prov:false},
+        {code:VY_DEF.cable,def:'ASME 1/2" NPT cable entry',prov:false},
+        {code:VY_DEF.comm,def:'HART 7 — MUST match the sensor comm (JA)',prov:true},
+        {code:'1',def:'With display',prov:false},{code:'00',def:'(fixed)',prov:false}
+      ]
+    };
+    // VY1C signal cable — length is always a per-job ask
+    const cableLen=spec.cableLengthM||null;
+    const lenCode=cableLen?('-'+String(Math.min(50,Math.ceil(cableLen/5)*5)).padStart(2,'0')+'M'):'-[LEN]';
+    const cbl={
+      title:'Signal cable (VY1C)',
+      partNumber:`VY1C-1${lenCode}`,
+      breakdown:[
+        {code:'VY1C',def:'Vortex signal cable, 6-wire double-shielded',prov:false},
+        {code:'1',def:'With end finish',prov:false},
+        {code:lenCode,def:cableLen?(cableLen+' m (rounded up to 5 m step; max 50 m)'):'Cable length REQUIRED — distance sensor→transmitter (5–50 m)',prov:!cableLen}
+      ]
+    };
+    R.assembly=[
+      {title:'Remote sensor (VY'+sz.inch+'")', partNumber:sensor.partNumber, code:sensor.code, src:sensor.src, breakdown:sensor.breakdown},
+      {title:tx.title, partNumber:tx.partNumber, breakdown:tx.breakdown},
+      {title:cbl.title, partNumber:cbl.partNumber, breakdown:cbl.breakdown}
+    ];
+    R.provisional=true;
+    R.flags.push({t:'flag',ic:'ASSEMBLY · CONFIRM',d:R.assemblyNote});
+    R.flags.push({t:'flag',ic:'MATCH RULE',d:'Sensor and transmitter certification and comm code must match (both '+sensor.cert.code+' / JA). Reasoned from datasheet — verify against a real remote order.'});
+    if(!cableLen) R.questions.push('Cable length (sensor→transmitter distance, 5–50 m) — required for the VY1C, no default.');
+    if(sensor.shedAsk) R.questions.push('Temperature compensation? '+sensor.shedReason+' suggests the B temp-sensor shedder bar — confirm, or keep general (A).');
+    R.partNumber=sensor.partNumber+'  +  '+tx.partNumber+'  +  '+cbl.partNumber;
+  } else {
+    // ---- INTEGRAL: single unit ----
+    const u=vyBuildUnit(spec, sz, {display:'1'});
+    R.code=u.code; R.src=u.src; R.partNumber=u.partNumber; R.breakdown=u.breakdown;
+    if(u.shedAsk){ R.provisional=true; R.questions.push('Temperature compensation? '+u.shedReason+' suggests the B temp-sensor shedder bar (for mass/energy flow) — confirm, or keep general (A).'); }
+  }
+
+  if(spec.areaClassification!=='general_purpose' && spec.areaClassification!=='hazardous')
+    R.questions.push('Area classification not stated — holding FM explosionproof (FF1) as the fail-safe. Confirm general-purpose to drop to 001.');
+  R.questions.push('Confirm line size and process connection (flanged ASME150 default; wafer / other rating if needed).');
+  return R;
+}
+
+
+/* ================= Quarter-turn VALVE assembly engine ================= */
+const VALVE_DATA = {"families":{"WKM":{"label":"WKM butterfly","sizes":["3","4","6","8","10","12"],"body_styles":{"lugged":"WKM B5123","wafer":"WKM B5120"},"body_default":"lugged","build":{"3":{"valve":"3\" WKM B5120-02-S02-11/00","linkage":"LKO-4-B5120-F07","actuator":"XL131SR80"},"4":{"valve":"4\" WKM B5120-02-S02-11/00","linkage":"LKO-4-B5120-F07","actuator":"XL186SR80"},"6":{"valve":"6\" WKM B5120-02-S02-11/00","linkage":"LKO-6-B5120-F10","actuator":"XL426SR80"},"8":{"valve":"8\" WKM B5120-02-S02-11/00","linkage":"LKO-8-B5120-F10","actuator":"XL681SR80"},"10":{"valve":"10\" WKM B5120-02-S02-11/00","linkage":"LKO-10-B5120-F12","actuator":"XL1127SR80"},"12":{"valve":"12\" WKM B5120-02-S02-11/00","linkage":"LKO-12-B5120-F12","actuator":"XL1372SR80"}},"actuator":{"digital":{"80psi":{"3":"XL131SR80","4":"XL186SR80","6":"XL426SR80","8":"XL681SR80","10":"XL1127SR80","12":"XL1372SR80"},"60psi":{"3":"XL131SR60","4":"XL221SR60","6":"XL681SR60","8":"XL1127SR60","10":"XL1372SR60","12":"XL2586SR6BTS"}},"control":{"80psi":{"3":"XL131SR80","4":"XL186SR80","6":"XL426SR80","8":"XL681SR80","10":"XL1127SR80","12":"XL1372SR80"},"60psi":{"3":"XL131SR60","4":"XL221SR60","6":"XL681SR60","8":"XL1127SR60","10":"XL1372SR60","12":"XL2586SR6BTS"}}}},"FLOWTEK":{"label":"FLOW-TEK flanged ball","sizes":["0.5","0.75","1","1.5","2","3","4","6"],"body_styles":{"flanged":"FLOW-TEK F15/RF15-316"},"body_default":"flanged","build":{"0.5":{"valve":"1/2\" FLOW-TEK F15-316","linkage":"LKO-05-F15-F05","actuator":"XL26SR80"},"0.75":{"valve":"3/4\" FLOW-TEK F15-316","linkage":"LKO-1-RF15-F07","actuator":"XL71SR80"},"1":{"valve":"1\" FLOW-TEK RF15-316","linkage":"LKO-1-RF15-F07","actuator":"XL71SR80"},"1.5":{"valve":"1-1/2\" FLOW-TEK RF15-316","linkage":"LKO-1-F15-F07","actuator":"XL71SR80"},"2":{"valve":"2\" FLOW-TEK RF15-316","linkage":"LKO-2-RF15-F07","actuator":"XL131SR80"},"3":{"valve":"3\" FLOW-TEK RF15-316","linkage":"LKO-3-RF15-F07","actuator":"XL221SR80"},"4":{"valve":"4\" FLOW-TEK RF15-316","linkage":"LKO-3-F15-F07","actuator":"XL281SR80"},"6":{"valve":"6\" FLOW-TEK RF15-316","linkage":"LKO-4-RF15-F10","actuator":"XL681SR80"}},"actuator":{"digital":{"80psi":{"0.5":"XL26SR80","0.75":"XL71SR80","1":"XL71SR80","1.5":"XL71SR80","2":"XL131SR80","3":"XL221SR80","4":"XL281SR80","6":"XL681SR80"},"60psi":{"0.5":"XL26SR60","0.75":"XL71SR60","1":"XL71SR60","1.5":"XL131SR60","2":"XL186SR60","3":"XL281SR60","4":"XL426SR60","6":"XL1127SR60"}},"control":{"80psi":{"0.5":"XL131SR80","0.75":"XL131SR80","1":"XL131SR80","1.5":"XL131SR80","2":"XL131SR80","3":"XL281SR80","4":"XL426SR80","6":"XL681SR80","8":"XL1372SR80"},"60psi":{"0.5":"XL131SR60","0.75":"XL131SR60","1":"XL131SR60","1.5":"XL131SR60","2":"XL186SR60","3":"XL426SR60","4":"XL426SR60","6":"XL1127SR60"}}}}},"trim":{"south_digital":{"limit_switch":"TVF-DS2GNPM000008938 / REC","mounting_kit":{"to_8in":"AV-TA01","10in_up":"VA21724-CTI"},"assembly_suffix_style":"...LOSRTVFDXTK (TVFD encodes the TVF limit switch)"},"loudon_tn":{"limit_switch":"NXL2100 / REC","mounting_kit":{"to_8in":"HY-STOOL-SS","10in_up":"LARGE HY-STOOL"},"assembly_suffix_style":"...LOSRNXLX551TK / ...LOSRNXLXTK (NXL encodes the NXL2100 limit switch)"},"decatur_il":{"limit_switch":"TVF-DS2GNPM000008938 / REC","mounting_kit":{"to_8in":"AV-TA01","10in_up":"VA21724-CTI"},"air_pressure":"60psi","assembly_suffix_style":"...LOS6TVFDXTK (S6 encodes 60psi air; TVFD the TVF switch)","_note":"Decatur uses South-Digital-style trim (TVF switch, AV-TA01 mount) but runs 60psi air -> upsized actuators. Trim and air pressure are independent dimensions."}},"control_element":{"digital":{"solenoid":"ASCO X551 120V","cordset":"P-VAS22-22-A162 (RSG)"},"control":{"positioner":{"_note":"The control positioner model varies by location. EP5N at South Digital / Loudon / etc; D3XNU at Decatur.","default":"PMV EP5N / TURCK 4 PIN REC","decatur_il":"PMV D3XNU-D23VA-Z4XX / 4 PIN REC"},"fitting_tubing":"316SS TUBING / FITTING","accessories":{"cordset":"P-RSV RKV 40-949-2M","conduit_adapter":"CA1-RKFV 40/S3017","flying_leads":"P-RKV-40-949-2M"}}},"defaults":{"air_pressure":"80psi","package_type":"digital","body_style":"lugged","trim":"south_digital"}};
+function valveSizeMatch(family, reqInch){
+  const sizes=VALVE_DATA.families[family].sizes.map(Number);
+  if(reqInch==null) return null;
+  return sizes.reduce((b,s)=>Math.abs(s-reqInch)<Math.abs(b-reqInch)?s:b);
+}
+function fmtSize(n){ return (n===0.5?'1/2':n===0.75?'3/4':n===1.5?'1-1/2':String(n)); }
+function runValve(spec){
+  // verified rolled-up assembly numbers (lookup only — never generated). key: family|package|air|trim
+  const VALVE_ASM={
+    "WKM|digital|80psi|south_digital":{"3":"3-B5120LOSRTVFDXTK","4":"4-B5120LOSRTVDXTK","6":"6-B5120LOSRTVFDXTK","8":"8-B5120LOSRTVDXTK","10":"10-B5120LOSRTVFDXTK","12":"12-B5120LOSRTVFDXTK"},
+    "WKM|digital|80psi|loudon_tn":{"3":"3-B5120LOSRNXLX551TK","4":"4-B5120LOSRNXLX551TK","6":"6-B5120LOSRNXLXTK","8":"8-B5120LOSRNXLX551TK","10":"10-B5120LOSRNXLXTK","12":"12-B5120SRNXLXTK"},
+    "WKM|digital|60psi|decatur_il":{"3":"3-B5120LOS6TVFDTK","4":"4-B5120LOS6TVFDXTK","6":"6-B5120LOS6TVFDXTK","8":"8-B5120LOS6TVFDXTK","10":"10-B5120LOS6TVFDXTK","12":"12-B5120LOS6TVFDXTK"},
+    "WKM|control|60psi|decatur_il":{"3":"3-B5120LOS6D3TK","4":"4-B5120LOS6D3TK","6":"6-B5120LOS6D3TK","8":"8-B5120S6D3TK","10":"10-B5120LOS6D3XTKR","12":"12-B5120LOSR6D3TK"},
+    "WKM|control|80psi|*":{"3":"3-B5120LOSREPT","4":"4-B5120LOEP5TK","6":"6-B5120LOSREPRC","8":"8-B5120SREPTK","10":"10-B5120LOSREP5R","12":"12-B5120LOSREPR"},
+    "FLOWTEK|digital|80psi|south_digital":{"0.5":"05-F15LOSRTVFDXTK","0.75":"07-F15LOSRTVDXTK","1":"1-RF15LOSRTVFDXTK","1.5":"15-RF15LOSRTVFDXTK","2":"2-RF15LOSRTVFDXTK","3":"3-RF15LOSRTVFDXTK","4":"4-RF15LOSRTVFDXTK","6":"6-RF15LOSRTVFDXTK"},
+    "FLOWTEK|digital|60psi|decatur_il":{"0.5":"05-F15LOS6TVFDXTK","0.75":"07-F15LOS6TVDXTK","1":"1-RF15LOSR6TVFDXTK","1.5":"15-RF15LOS6TVFDXTK","2":"2-RF15LOSR6TVFDXTK","3":"3-RF15LOS6TVFDXTK","4":"4-RF15LOSR6TVFDXTK","6":"6-RF15LOSR6TVFDXTK"}
+  };
+  function lookupAsm(family,pkg,air,trimKey,szKey){
+    const k1=`${family}|${pkg}|${air}|${trimKey}`;
+    const k2=`${family}|${pkg}|${air}|*`;
+    const tbl=VALVE_ASM[k1]||VALVE_ASM[k2];
+    return (tbl && tbl[szKey]) ? tbl[szKey] : null;
+  }
+  const R={instrument:'Quarter-turn valve assembly', gates:[], flags:[], questions:[], assembly:[]};
+  // ---- resolve family ----
+  let family=spec.valveFamily;
+  if(!family){ R.fatal='Valve family not recognized. Specify WKM (butterfly) or FLOW-TEK (ball).'; return R; }
+  family=family.toUpperCase().includes('FLOW')?'FLOWTEK':'WKM';
+  const fam=VALVE_DATA.families[family];
+
+  // ---- resolve size (closest field-proven) ----
+  const reqInch = spec.valveSizeInch;
+  const sz = valveSizeMatch(family, reqInch);
+  if(sz==null){ R.fatal='Valve size not found. Give a line size.'; return R; }
+  const szKey = (sz===0.5?'0.5':sz===0.75?'0.75':sz===1.5?'1.5':String(sz));
+  const build = fam.build[szKey];
+  if(!build){ R.fatal=`No field-proven build for ${fmtSize(sz)}" ${family}.`; return R; }
+  const sizeFlagged = (reqInch!=null && Math.abs(sz-reqInch)>0.01);
+
+  // ---- resolve dimensions with defaults (assume-and-flag) ----
+  const pkg = (spec.packageType==='control')?'control':'digital';
+  const pkgDefaulted = !spec.packageType;
+  const air = (spec.airPressure==='60psi')?'60psi':'80psi';
+  const airDefaulted = !spec.airPressure;
+  let trimKey = spec.trim || VALVE_DATA.defaults.trim;
+  const trimDefaulted = !spec.trim;
+  const trim = VALVE_DATA.trim[trimKey];
+  // body style (WKM only; FLOW-TEK is flanged)
+  let bodyStyle, valveCode;
+  if(family==='WKM'){
+    bodyStyle = (spec.bodyStyle==='wafer')?'wafer':'lugged';
+    valveCode = fam.body_styles[bodyStyle]; // B5123 lugged / B5120 wafer
+  } else {
+    bodyStyle='flanged'; valveCode=null;
+  }
+  const bodyDefaulted = (family==='WKM' && !spec.bodyStyle);
+
+  // ---- actuator: family x package x air x size (the sizing-critical pick) ----
+  const actBank = fam.actuator[pkg] && fam.actuator[pkg][air];
+  let actuator = actBank ? actBank[szKey] : null;
+  let actNote=null;
+  if(!actuator){
+    // control may not have 60psi for some, or size missing -> fall back to digital/80 with flag
+    const fb = (fam.actuator[pkg] && fam.actuator[pkg]['80psi'] && fam.actuator[pkg]['80psi'][szKey]) ||
+               (fam.actuator['digital'] && fam.actuator['digital'][air] && fam.actuator['digital'][air][szKey]);
+    actuator=fb||build.actuator;
+    actNote=`No exact field-proven actuator for ${pkg}/${air}/${fmtSize(sz)}"; showing closest — confirm.`;
+  }
+
+  // ---- valve body line ----
+  let valveLine;
+  if(family==='WKM'){
+    valveLine = `${fmtSize(sz)}" ${valveCode}-02-S02-11/00 (${bodyStyle} butterfly)`;
+  } else {
+    // FLOW-TEK ball: control REQUIRES a V-port valve (modulating trim); digital is standard port.
+    valveLine = build.valve + (pkg==='control' ? ' (V PORT)' : '');
+  }
+
+  // ---- mounting kit (from trim, by size) ----
+  const mount = (sz>=10) ? trim.mounting_kit['10in_up'] : trim.mounting_kit['to_8in'];
+
+  // ---- linkage (from field-proven build; body swap doesn't change it) ----
+  const linkage = build.linkage;
+
+  // ---- build the BOM ----
+  const bom=[];
+  bom.push({role:'Valve', part:valveLine});
+  bom.push({role:'Lockable linkage kit', part:linkage});
+  bom.push({role:'Actuator', part:actuator});
+  bom.push({role:'Mounting kit', part:mount});
+  if(pkg==='digital'){
+    bom.push({role:'Limit switch', part:trim.limit_switch});
+    bom.push({role:'Solenoid', part:VALVE_DATA.control_element.digital.solenoid});
+    bom.push({role:'Solenoid cordset', part:VALVE_DATA.control_element.digital.cordset});
+  } else {
+    const posBank=VALVE_DATA.control_element.control.positioner;
+    const positioner = (trimKey==='decatur_il' && posBank.decatur_il) ? posBank.decatur_il : posBank.default;
+    bom.push({role:'Positioner', part:positioner});
+    bom.push({role:'Fitting/tubing', part:VALVE_DATA.control_element.control.fitting_tubing});
+  }
+
+  // ---- verified assembly model code (lookup only) ----
+  const asmCode = lookupAsm(family,pkg,air,trimKey,szKey);
+
+  // ---- render as assembly ----
+  R.assembly=[{title:`${fmtSize(sz)}" ${fam.label} — ${pkg} package`,
+    partNumber: asmCode || 'assembly number to be assigned',
+    breakdown:bom.map(b=>({code:b.role, def:b.part, prov:false}))}];
+  if(asmCode){
+    R.assemblyCode=asmCode;
+  } else {
+    R.flags.push({t:'flag',ic:'ASSEMBLY # · TO BE ASSIGNED',d:'No verified rolled-up assembly number on file for this exact combination — the component BOM above is field-proven; assign the assembly number per Allied numbering. (Not auto-generated.)'});
+  }
+  R.headerChips=[
+    {k:'family',v:fam.label},
+    {k:'size',v:fmtSize(sz)+'"'},
+    {k:'body',v:bodyStyle+(bodyDefaulted?' (default)':'')},
+    {k:'package',v:pkg+(pkgDefaulted?' (default)':'')},
+    {k:'air',v:air+(airDefaulted?' (default)':'')},
+    {k:'trim/location',v:trimKey.replace('_',' ')+(trimDefaulted?' (default)':'')}
+  ];
+
+  // ---- flags for every defaulted/assumed dimension ----
+  if(airDefaulted) R.flags.push({t:'flag',ic:'AIR PRESSURE · ASSUMED',d:'Air pressure not stated — assumed 80 psi (South Digital / Loudon standard). At 60 psi (Decatur) the actuator upsizes. Confirm.'});
+  if(pkgDefaulted) R.flags.push({t:'flag',ic:'PACKAGE · ASSUMED',d:'Assumed digital (on/off). Say "control" for a modulating package (positioner instead of solenoid).'});
+  if(family==='WKM' && bodyDefaulted) R.flags.push({t:'flag',ic:'BODY STYLE · ASSUMED',d:'Body style not stated — assumed lugged (B5123). Wafer (B5120) available; both share all accessories/actuators, only the valve body differs.'});
+  if(trimDefaulted) R.flags.push({t:'flag',ic:'LOCATION/TRIM · ASSUMED',d:'Trim not stated — assumed South Digital (TVF limit switch, AV-TA01 mounting). Loudon (NXL2100/HY-STOOL) or Decatur (60psi) available.'});
+  if(sizeFlagged) R.flags.push({t:'flag',ic:'SIZE · CLOSEST MATCH',d:`Requested ${reqInch}" — nearest field-proven ${family} size is ${fmtSize(sz)}". Confirm.`});
+  if(actNote) R.flags.push({t:'flag',ic:'ACTUATOR · CONFIRM',d:actNote});
+
+  // ---- severe service: flag, do not auto-upsize ----
+  if(spec.severeService && spec.severeService!=='standard'){
+    R.flags.push({t:'flag',ic:'SEVERE SERVICE · VERIFY ACTUATOR',d:`Service flagged "${spec.severeService}". The field-proven build is sized for STANDARD service. Severe duty (slurry/dry-gas x1.25, low-temp x1.20, ESD x1.60) may need a larger actuator — verify against the torque chart before quoting. NOT auto-upsized.`});
+  }
+  // FLOW-TEK control requires V-port valve (modulating trim)
+  if(family==='FLOWTEK' && pkg==='control'){
+    R.flags.push({t:'pass',ic:'CONTROL · V-PORT',d:'Control package — FLOW-TEK control valve uses V-PORT trim (modulating characteristic) and the upsized control actuator. A standard on/off ball cannot modulate.'});
+  }
+
+  R.questions.push('Confirm body style, package type, air pressure, and location/trim — defaults assumed where not stated (see flags).');
+  return R;
+}
+
+function renderResult(R, mount){
+  const host=mount||document.getElementById('out');
+  if(!mount){host.innerHTML='';}
+  delay=0;
+  if(R.fatal){host.appendChild(el('div','err',(R._label?R._label+': ':'')+R.fatal));return;}
+  const pipe=el('div','pipe');host.appendChild(pipe);
+
+  // extraction
+  stage(pipe,'ok','What Claude read from the inquiry',c=>{
+    if(R.instrument){const it=el('div','note');it.innerHTML='Instrument: <b style="color:var(--signal)">'+R.instrument+'</b>';it.style.marginTop='0';it.style.marginBottom='9px';c.appendChild(it);}
+    const ch=el('div','chips');
+    (R.headerChips||[]).forEach(({k,v})=>ch.appendChild(el('div','chip'+(v?'':' miss'),`${k} <b>${v||'—'}</b>`)));
+    c.appendChild(ch);
+    if(R.note) c.appendChild(el('div','note','Note from the photo: '+R.note));
+    c.appendChild(el('div','note','This is the only step the language model does — reading. Everything below is the deterministic engine.'));
+  });
+
+  // model code (single-unit only; assembly shows each component's code in the assembly paper)
+  if(R.code) stage(pipe,R.provisional?'warn':'ok','Assembled model code',c=>{
+    const line=el('div','codeline');
+    R.code.forEach((v,k)=>{const sp=el('span','seg '+R.src[k],v.replace('*',''));line.appendChild(sp);if(k<R.code.length-1)line.appendChild(document.createTextNode(' '));});
+    c.appendChild(line);
+    c.appendChild(el('div','note',R.provisional?'Held positions are provisional (amber) pending the questions below — not final.':'Every position is from the inquiry, an Allied default, or a forced rule. None guessed.'));
+  });
+
+  // gates
+  if(R.gates&&R.gates.length) stage(pipe,R.gates.some(g=>g.t==='flag')?'warn':'ok','Application gates',c=>{
+    R.gates.forEach(g=>{const v=el('div','verdict '+g.t);v.innerHTML=`<span class="ic">${g.ic}</span><div>${g.d}</div>`;c.appendChild(v);});
+  });
+
+  // flags
+  if(R.flags&&R.flags.length) stage(pipe,'warn','Flags',c=>{
+    R.flags.forEach(g=>{const v=el('div','verdict flag');const ic=(typeof g==='object'&&g.ic)?g.ic:'NOTE';const d=(typeof g==='object')?g.d:g;v.innerHTML=`<span class="ic">${ic}</span><div>${d}</div>`;c.appendChild(v);});
+  });
+
+  // questions
+  if(R.questions&&R.questions.length) stage(pipe,'','Open questions',c=>{R.questions.forEach(q=>c.appendChild(el('div','q',q)));});
+
+  // quote paper: single unit OR multi-component assembly
+  if(R.assembly){
+    const asm=el('div','paper');
+    asm.appendChild(el('span','tag','For your review · assembly'));
+    // Valve assembly model code headline (verified, from truth layer) — shown prominently
+    if(R.assemblyCode){
+      const codebox=el('div','pnbox');
+      codebox.innerHTML=`<span class="pnlabel">assembly model code · verified</span><span class="pnval">${R.assemblyCode}</span>`;
+      asm.appendChild(codebox);
+    }
+    asm.appendChild(el('div','bk-title','This is a '+R.assembly.length+'-item assembly — quote all '+R.assembly.length+' line items together'));
+    R.assembly.forEach((comp,i)=>{
+      const cb=el('div','asmcomp');
+      cb.appendChild(el('div','asmtitle',`${i+1}. ${comp.title}`));
+      if(!R.assemblyCode){
+        const pn=el('div','pnbox');
+        pn.innerHTML=`<span class="pnlabel">assembly number</span><span class="pnval">${comp.partNumber}</span>`;
+        cb.appendChild(pn);
+      }
+      (comp.breakdown||[]).forEach(b=>{
+        const r=el('div','bk-row');
+        r.appendChild(el('div','bk-code'+(b.prov?' prov':''),b.code));
+        r.appendChild(el('div','bk-def'+(b.prov?' prov':''),b.def));
+        cb.appendChild(r);
+      });
+      asm.appendChild(cb);
+    });
+    host.appendChild(asm);
+    return;
+  }
+  const paper=el('div','paper');
+  paper.appendChild(el('span','tag','For your review'));
+  const pn=el('div','pnbox');
+  pn.innerHTML=`<span class="pnlabel">ERP part number${R.provisional?' · provisional':''}</span><span class="pnval">${R.partNumber}</span>`;
+  paper.appendChild(pn);
+  paper.appendChild(el('div','bk-title','What this configuration means'));
+  (R.breakdown||[]).forEach(b=>{
+    const r=el('div','bk-row');
+    r.appendChild(el('div','bk-code'+(b.prov?' prov':''),b.code));
+    r.appendChild(el('div','bk-def'+(b.prov?' prov':''),b.def));
+    paper.appendChild(r);
+  });
+  host.appendChild(paper);
+}
+
+let quoteItems=[]; // {spec, block} per quoted item — enables conversational re-quoting
+function renderAll(items, splitNote){
+  const out=document.getElementById('out');out.innerHTML='';
+  quoteItems=[];
+  const multi=items.length>1;
+  if(multi){
+    const banner=el('div','splitbanner');
+    banner.innerHTML=`<span class="ic">${items.length} ITEMS</span><div>${splitNote||('Read as '+items.length+' separate items. Confirm the split before quoting.')}</div>`;
+    out.appendChild(banner);
+  }
+  items.forEach((spec,i)=>{
+    const block=el('div','itemblock');
+    if(multi){
+      const hd=el('div','itemhead');
+      hd.innerHTML=`<span class="itemnum">Item ${i+1}</span>${spec.label?'<span class="itemlabel">'+spec.label+'</span>':''}`;
+      block.appendChild(hd);
+    }
+    out.appendChild(block);
+    quoteItems.push({spec, block});
+    drawItem(i);
+  });
+}
+function drawItem(i){
+  const it=quoteItems[i];
+  const R=dispatch(it.spec);
+  R._label=it.spec.label||null;
+  // clear just the quote area of this block (keep the header)
+  Array.from(it.block.querySelectorAll('.pipe,.paper,.fbwrap')).forEach(n=>n.remove());
+  renderResult(R, it.block);
+  attachFeedback(i);
+}
+function attachFeedback(i){
+  const it=quoteItems[i];
+  const w=el('div','fbwrap');
+  w.innerHTML=`<div class="fblabel">Not right? Tell me what to change</div>
+    <div class="fbrow">
+      <input class="fbin" id="fbin${i}" placeholder='e.g. "make it wafer and 24VDC" or "300# flanges"' onkeydown="if(event.key==='Enter')sendFeedback(${i})">
+      <button class="fbbtn" onclick="sendFeedback(${i})">apply</button>
+    </div>
+    <div class="fblog" id="fblog${i}"></div>`;
+  it.block.appendChild(w);
+}
+function fbLog(i,html,cls){
+  const log=document.getElementById('fblog'+i);
+  if(!log)return;
+  const line=el('div','fbline'+(cls?' '+cls:''));line.innerHTML=html;
+  log.appendChild(line);
+}
+async function sendFeedback(i){
+  const input=document.getElementById('fbin'+i);
+  const text=(input.value||'').trim();
+  if(!text)return;
+  input.value='';
+  fbLog(i,'<span class="fbyou">you:</span> '+text.replace(/</g,'&lt;'));
+  const wait=el('span','');wait.textContent='interpreting…';
+  fbLog(i,'<span class="fbsys">…</span> interpreting');
+  try{
+    const change=await interpretFeedback(quoteItems[i].spec, text);
+    // remove the 'interpreting' line
+    const log=document.getElementById('fblog'+i); if(log&&log.lastChild) log.removeChild(log.lastChild);
+    if(change.ambiguous || !change.changes || !Object.keys(change.changes).length){
+      fbLog(i,'<span class="fbsys">?</span> '+(change.question||'I\u2019m not sure which field you mean — can you be more specific?'),'ask');
+      return;
+    }
+    Object.assign(quoteItems[i].spec, change.changes);
+    const summary=Object.entries(change.changes).map(([k,v])=>k+' → '+v).join(', ');
+    fbLog(i,'<span class="fbsys">applied:</span> '+summary,'ok');
+    drawItem(i); // re-run deterministic engine + redraw
+  }catch(e){
+    const log=document.getElementById('fblog'+i); if(log&&log.lastChild) log.removeChild(log.lastChild);
+    fbLog(i,'<span class="fbsys">!</span> couldn\u2019t interpret that ('+(e.message||e)+'). Try a manual edit, or rephrase.','ask');
+  }
+}
+
+/* ---------------- feedback interpreter (language layer -> field change ONLY) ---------------- */
+const FEEDBACK_PROMPT=`You convert a user's natural-language edit to an instrument quote into a STRUCTURED FIELD CHANGE. You do NOT produce part numbers, codes, or results — you ONLY map the edit to spec fields. A deterministic engine rebuilds the quote from the fields you set.
+
+Output ONLY JSON, no prose: {"changes": {field:value, ...}, "ambiguous": boolean, "question": string|null}
+
+Allowed fields and the values they take:
+- connectionType: "wafer" | "flange"
+- connectionRating: "150" | "300" | "600"
+- powerSupply: "ac" | "dc_24"   (flow/AXG only)
+- groundingRings: "yes" | "no"   (flow/AXG only)
+- lineSizeInch: number
+- electrodeMaterial: string (e.g. "Hastelloy","tantalum","316L")
+- areaClassification: "general_purpose" | "hazardous"
+- requiredSpanPsi: number   (pressure/EJA)
+- pressureConnection: "female" | "male"   (pressure/EJA)
+- bracket: "yes" | "no"   (pressure/EJA)
+- tempCompensated: "yes" | "no"   (vortex/VY)
+- mountType: "integral" | "remote"   (vortex/VY)
+- steamPressurePsig: number   (vortex steam)
+- cableLengthM: number   (vortex remote)
+- fluid: string
+
+Mapping rules:
+- "24VDC" / "24 V DC" / "24 volt" / "DC power" -> powerSupply:"dc_24". "120VAC"/"240VAC"/"AC power"/"line power" -> powerSupply:"ac".
+- "wafer" -> connectionType:"wafer". "flanged"/"flange" -> connectionType:"flange". "300#"/"class 300"/"300 lb" -> connectionRating:"300" (and 150/600 similarly).
+- "no grounding rings"/"remove rings"/"without rings" -> groundingRings:"no". "add rings"/"with grounding rings" -> groundingRings:"yes".
+- "general purpose"/"non-ex"/"GP"/"not explosion proof" -> areaClassification:"general_purpose". "hazardous"/"explosion proof"/"XP"/"Class I Div" -> areaClassification:"hazardous".
+- "4 inch"/'4"'/"DN100"/"100mm" -> lineSizeInch (convert mm: /25.4).
+- "temp compensated"/"temperature sensor"/"mass flow"/"energy flow" -> tempCompensated:"yes". "no temp comp"/"volumetric only" -> tempCompensated:"no".
+- "remote"/"remote mount" -> mountType:"remote". "integral" -> mountType:"integral".
+- steam pressure "X psig"/"X psi steam" -> steamPressurePsig:X. cable "X m"/"X meters" -> cableLengthM:X.
+- pressure span/range "0 to X psi"/"X psi range" (pressure transmitter) -> requiredSpanPsi:X.
+
+CRITICAL:
+- Map ONLY what the user clearly asked to change. Multiple changes in one message are fine — include them all.
+- If you cannot confidently map the edit to a field/value (ambiguous wording, a field we don't model, "make it bigger" without a number), set "ambiguous":true, leave "changes" empty, and put a short clarifying question. NEVER guess a field or value.
+- Do not change fields the user didn't mention.`;
+
+async function interpretFeedback(spec, text){
+  const msg=`Current spec (instrumentType=${spec.instrumentType||'flow'}):\n${JSON.stringify(spec)}\n\nUser edit: "${text}"`;
+  const resp=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:600,messages:[{role:"user",content:FEEDBACK_PROMPT+"\n\n"+msg}]})
+  });
+  const data=await resp.json();
+  let s=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
+  const parsed=parseModelJson(s);
+  if(!parsed) throw new Error("couldn't read that edit");
+  return parsed;
+}
+const EXTRACT_PROMPT=`You extract structured fields from an industrial instrument sales inquiry for a Yokogawa distributor. The input may be (a) text — a full email or a terse note, and/or (b) one or more PHOTOS (nameplates or spec sheets, sometimes corroded or partly illegible).
+
+A single message may request MORE THAN ONE instrument (e.g. "a 2-inch and a 4-inch mag meter, plus a pressure transmitter"). Split the request into separate items — one per distinct instrument to be quoted — and return an ARRAY.
+
+Return ONLY a JSON object, no markdown, no prose, of this exact shape:
+{"items":[ ITEM, ITEM, ... ], "splitNote": string|null }
+CRITICAL OUTPUT RULE: in each ITEM, include ONLY the keys you have an actual value for. OMIT any key whose value would be null/empty/unknown — do NOT emit null fields. This keeps the response short and prevents truncation. Always include "instrumentType". Example of a simple valve request: {"instrumentType":"valve","valveFamily":"FLOW-TEK","valveSizeInch":2,"packageType":"digital"}.
+The available keys an ITEM may use (include ONLY those with real values):
+{"instrumentType":"flow"|"vortex"|"pressure"|"valve"|"unclear","label":string|null,"valveFamily":"WKM"|"FLOW-TEK"|null,"valveSizeInch":number|null,"bodyStyle":"lugged"|"wafer"|null,"packageType":"digital"|"control"|null,"airPressure":"80psi"|"60psi"|null,"trim":"south_digital"|"loudon_tn"|"decatur_il"|null,"severeService":"dry_gas_or_slurry"|"low_temperature"|"emergency_shutdown"|null,"lineSizeInch":number|null,"lineSizeMm":number|null,"connectionType":"wafer"|"flange"|null,"connectionRating":string|null,"conductivityuScm":number|null,"flowGpm":number|null,"electrodeMaterial":string|null,"competitorBrand":string|null,"competitorModel":string|null,"groundingRings":"yes"|"no"|null,"powerSupply":"ac"|"dc_24"|null,"requiredSpanPsi":number|null,"pressureConnection":"female"|"male"|null,"bracket":"yes"|"no"|null,"areaClassification":"general_purpose"|"hazardous"|null,"fluid":string|null,"temperatureMaxC":number|null,"outputType":string|null,"mountType":"integral"|"remote"|null,"tempCompensated":"yes"|"no"|null,"cableLengthM":number|null,"steamPressurePsig":number|null,"viscosityCst":number|null,"isAbrasiveOrSlurry":boolean,"existingModel":string|null,"isLegacyModel":boolean,"lowConfidence":[string],"notes":string|null}
+
+Rules:
+- ALWAYS return at least one item. A single-instrument request → an array of one.
+- label: a short human tag for the item (e.g. "2\" mag meter", "discharge pressure xmtr") so the user can tell items apart. Null if only one item.
+- SHARED CONTEXT: if the message states something that applies to all items (e.g. "everything explosion-proof", a plant/site, a common fluid, an output preference), APPLY it to every item it logically covers. Do not drop shared context when splitting. But do NOT invent context for an item the message didn't give it.
+- splitNote: if you split into multiple items, briefly say how (e.g. "Read as 3 items: 2\" and 4\" mag meters + one pressure transmitter, all explosion-proof"). If the grouping is ambiguous, say so here so the user can confirm. Null for a single item.
+- instrumentType: "flow" = MAGNETIC flowmeter (AXG/AXF, conductive liquid, electrodes/liner). "vortex" = VORTEX flowmeter (VY/YEWFLO, steam/gas/liquid, shedder bar — signalled by "vortex", "VY", "YEWFLO", steam service, or a model starting VY). "pressure" = pressure/DP transmitter (EJA, psi/bar/kPa/MPa). "valve" = quarter-turn valve (see valve mapping below). "unclear" if you can't tell. Recognize confidently, but if a flow inquiry doesn't clearly indicate magnetic vs vortex, set "unclear" rather than guessing. Signals: "valve", "WKM", "FLOW-TEK", "butterfly", "ball valve", actuator terms, "lugged"/"wafer". Map shop vocabulary to dimensions:
+  - valveFamily: "WKM" (butterfly) or "FLOW-TEK"/"FlowTek"/"F15"/"RF15" (ball).
+  - bodyStyle: "lugged" or "wafer" if stated (WKM only). Default null (engine assumes lugged).
+  - packageType: "control" if "control"/"modulating"/"throttling"/"positioner" mentioned; "digital" if "on/off"/"on off"/"solenoid"; else null.
+  - airPressure: "60psi" if "60 psi"/"60#"/"Decatur"; "80psi" if "80 psi"/"80#"; else null.
+  - trim: "south_digital" if "TVF"/"South Digital"; "loudon_tn" if "NXL"/"Loudon"; "decatur_il" if "Decatur"; else null.
+  - severeService: "dry_gas_or_slurry","low_temperature", or "emergency_shutdown"/"ESD" if such service stated; else null.
+  - "lockout"/"lockable"/"lock kit" -> note only (lockable linkage is standard; no field needed). "Hytork" -> note only (standard actuator brand). Do not put these in a field.
+  - valveSizeInch: the valve size in inches.
+- mountType: "remote" only if the inquiry explicitly says remote / remote mount / separate transmitter; else "integral" or null. Do NOT infer remote from indirect hints.
+- tempCompensated: "yes" if mass flow / energy flow / temperature compensation / steam mass is requested; "no" if explicitly volumetric only; else null.
+- cableLengthM: for remote vortex, the sensor-to-transmitter cable length in metres if stated; else null.
+- steamPressurePsig: for STEAM service, the operating/saturated steam pressure in psig if stated (convert from bar/kPa/MPa if needed: 1 bar=14.5 psi, 1 MPa=145 psi). Used to set steam density for the low-flow mass-flow cutoff. Else null.
+- viscosityCst: fluid kinematic viscosity in cSt if stated (relevant for hot oil); else null.
+- Only fill a field if stated or implied; else null. Convert temps to °C (max of a range).
+- groundingRings: default null (= standard rings included). Set "no" ONLY if the inquiry explicitly says no/without grounding rings. Set "yes" only if explicitly requested. Otherwise null.
+- powerSupply: default null (= standard 100-240 VAC). Set "dc_24" if the inquiry asks for 24 VDC / 24 V DC / 24V loop / low-voltage DC power. Set "ac" only if 120/240 VAC explicitly stated. Otherwise null.
+- requiredSpanPsi: the needed measurement span IN PSI (1 bar≈14.5, 1 MPa≈145, 1 kPa≈0.145).
+- areaClassification: "hazardous" if explosion-proof/classified; "general_purpose" ONLY if explicitly non-hazardous; else null.
+- isAbrasiveOrSlurry: true if the fluid carries solids/ash/slurry.
+- existingModel/isLegacyModel: from a nameplate, the existing unit's model (e.g. "AXF025"); legacy if a previous generation.
+- CRITICAL — never guess characters you cannot clearly read on a nameplate. Leave null/partial and add to "lowConfidence". Never invent a value.
+Input follows:`;
+
+function buildContent(text, images){
+  const parts=[];
+  images.forEach(im=>parts.push({type:"image",source:{type:"base64",media_type:im.mime,data:im.b64}}));
+  parts.push({type:"text",text:EXTRACT_PROMPT+"\n\n"+(text||"(no text provided; read the photo[s])")});
+  return parts;
+}
+
+async function extract(text, images){
+  const content = (images&&images.length) ? buildContent(text,images) : EXTRACT_PROMPT+"\n\n"+text;
+  const resp=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:3000,messages:[{role:"user",content}]})
+  });
+  const data=await resp.json();
+  if(data.error){
+    throw new Error("Extraction service error: "+(data.error.message||data.error.type||"unknown")+". Use manual entry below.");
+  }
+  let txt=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
+  if(!txt.trim()){
+    throw new Error("Extraction returned an empty response (stop_reason: "+(data.stop_reason||"?")+"). Use manual entry below.");
+  }
+  const parsed=parseModelJson(txt);
+  if(!parsed){
+    const peek=txt.slice(0,220).replace(/\s+/g," ");
+    throw new Error("Couldn't parse the extraction. Response began: \u201C"+peek+"\u2026\u201D  — use manual entry below, or send this text to refine the parser.");
+  }
+  if(Array.isArray(parsed.items)) return parsed;
+  return {items:[parsed], splitNote:null};
+}
+// Resilient JSON extractor for model output. Strips fences/prose; if the JSON is truncated,
+// salvages every fully-completed item object. Returns null only if nothing usable survives.
+function parseModelJson(raw){
+  if(!raw) return null;
+  let s=raw.replace(/```json|```/gi,"").trim();
+  const a=s.search(/[\{\[]/);
+  if(a>0) s=s.slice(a);
+  // 1) straight parse
+  try{ return JSON.parse(s); }catch(e){}
+  // 2) trim to last top-level close
+  const lc=Math.max(s.lastIndexOf("}"),s.lastIndexOf("]"));
+  if(lc>0){ try{ return JSON.parse(s.slice(0,lc+1)); }catch(e){} }
+  // 3) salvage every complete {...} object (each is one item); ignore an incomplete trailing one
+  const objs=salvageObjects(s);
+  const parsed=[];
+  for(const o of objs){ try{ parsed.push(JSON.parse(o)); }catch(e){} }
+  if(parsed.length) return {items:parsed, splitNote:null};
+  return null;
+}
+// Collect every balanced top-level { ... } object substring (string-aware).
+function salvageObjects(s){
+  const out=[]; let depth=0,inStr=false,esc=false,startIdx=-1;
+  for(let i=0;i<s.length;i++){
+    const ch=s[i];
+    if(esc){esc=false;continue;}
+    if(ch==='\\'){esc=true;continue;}
+    if(ch==='"'){inStr=!inStr;continue;}
+    if(inStr)continue;
+    if(ch==='{'){ if(depth===0)startIdx=i; depth++; }
+    else if(ch==='}'){ depth--; if(depth===0&&startIdx>=0){ out.push(s.slice(startIdx,i+1)); startIdx=-1; } }
+  }
+  return out;
+}
+
+/* ---------------- image upload ---------------- */
+let IMAGES=[];
+function addImages(files){
+  [...files].forEach(f=>{
+    if(!f.type.startsWith('image/'))return;
+    const r=new FileReader();
+    r.onload=()=>{IMAGES.push({mime:f.type,b64:r.result.split(',')[1],url:r.result});renderThumbs();};
+    r.readAsDataURL(f);
+  });
+}
+function renderThumbs(){
+  const t=document.getElementById('thumbs');t.innerHTML='';
+  IMAGES.forEach((im,i)=>{
+    const d=el('div','thumb');d.innerHTML=`<img src="${im.url}"><button onclick="rmImg(${i})">×</button>`;
+    t.appendChild(d);
+  });
+}
+function rmImg(i){IMAGES.splice(i,1);renderThumbs();}
+
+function dispatch(spec){
+  if(spec.instrumentType==='pressure') return runEJA(spec);
+  if(spec.instrumentType==='vortex') return runVY(spec);
+  if(spec.instrumentType==='valve') return runValve(spec);
+  return runEngine(spec);
+}
+
+async function runFromText(){
+  const text=document.getElementById('inq').value.trim();
+  const btn=document.getElementById('runBtn'),st=document.getElementById('status');
+  if(!text && !IMAGES.length){st.innerHTML='<span class="spin">Add an inquiry or a photo first.</span>';return;}
+  btn.disabled=true;
+  st.innerHTML='<span class="spin"><span class="ring"></span>'+(IMAGES.length?'Claude is reading the photo…':'Claude is reading the inquiry…')+'</span>';
+  document.getElementById('out').innerHTML='';
+  try{
+    const result=await extract(text,IMAGES);
+    st.innerHTML='';btn.disabled=false;
+    renderAll(result.items, result.splitNote);
+  }catch(e){
+    btn.disabled=false;st.innerHTML='';
+    document.getElementById('out').innerHTML='';
+    const msg = IMAGES.length
+      ? 'Couldn\'t run live photo reading here ('+(e.message||e)+'). Photo reading needs the model connection; if it\'s unavailable, use “enter details manually” below.'
+      : 'Couldn\'t run live extraction here ('+(e.message||e)+'). Use “enter details manually” below — the engine runs the same either way.';
+    document.getElementById('out').appendChild(el('div','err',msg));
+    if(!IMAGES.length) toggleManual(true);
+  }
+}
+
+/* ---------------- manual path ---------------- */
+function toggleManual(force){const m=document.getElementById('manual');m.classList.toggle('show',force===true?true:!m.classList.contains('show'));}
+function toggleInstFields(){
+  const v=document.getElementById('m_inst').value;
+  document.getElementById('flowFields').style.display=(v==='flow')?'grid':'none';
+  document.getElementById('pressFields').style.display=(v==='pressure')?'grid':'none';
+  document.getElementById('vortexFields').style.display=(v==='vortex')?'grid':'none';
+  document.getElementById('valveFields').style.display=(v==='valve')?'grid':'none';
+}
+function num(id){const v=document.getElementById(id).value;return v===''?null:+v;}
+function str(id){const v=document.getElementById(id).value.trim();return v||null;}
+function runFromManual(){
+  const inst=document.getElementById('m_inst').value;
+  const fluid=str('m_fluid');
+  const base={instrumentType:inst,areaClassification:str('m_area'),fluid:fluid,temperatureMaxC:num('m_temp'),
+    outputType:null,mountType:null,existingModel:null,isLegacyModel:false,lowConfidence:[],notes:null,
+    isAbrasiveOrSlurry:/slurry|ash|abrasive|solids/i.test(fluid||'')};
+  let spec;
+  if(inst==='pressure'){
+    spec=Object.assign(base,{requiredSpanPsi:num('m_span'),pressureConnection:str('m_pconn'),bracket:str('m_brk')});
+  } else if(inst==='valve'){
+    spec=Object.assign({},base,{instrumentType:'valve',valveFamily:str('vlv_fam'),
+      valveSizeInch:num('vlv_size'),bodyStyle:str('vlv_body'),packageType:str('vlv_pkg'),
+      airPressure:str('vlv_air'),trim:str('vlv_trim'),severeService:str('vlv_sev')});
+  } else if(inst==='vortex'){
+    const vfluid=str('v_fluid');
+    spec=Object.assign({},base,{instrumentType:'vortex',fluid:vfluid,areaClassification:str('v_area'),
+      lineSizeInch:num('v_size'),connectionType:str('v_conn'),connectionRating:str('v_rating'),
+      flowGpm:num('v_flow'),tempCompensated:str('v_temp'),mountType:str('v_mount')||'integral',
+      cableLengthM:num('v_cable'),steamPressurePsig:num('v_steamp'),viscosityCst:num('v_visc'),
+      isAbrasiveOrSlurry:/slurry|ash|abrasive|solids/i.test(vfluid||'')});
+  } else {
+    spec=Object.assign(base,{lineSizeInch:num('m_size'),lineSizeMm:null,connectionType:str('m_conn'),connectionRating:null,
+      conductivityuScm:num('m_cond'),flowGpm:num('m_flow'),electrodeMaterial:str('m_elec'),
+      groundingRings:str('m_gnd'),powerSupply:str('m_pwr'),
+      competitorBrand:str('m_cbrand'),competitorModel:str('m_cmodel')});
+  }
+  renderAll([spec], null);
+}
+
+/* ---------------- examples ---------------- */
+const EX=[
+`Good morning — I'm selecting a magnetic flow meter for a 6-inch non-potable water line downstream of a pump and filter. We plan to reduce to 4-inch for the meter but that can change. New outdoor piping. The water is relatively high pH with coal ash and debris suspended in it. Design flow 600 gpm, design pressure ~150 psig, design temp max 150°F. HART would be good.`,
+`Need a 2" wafer mag, explosion proof, HART output, for a chemical transfer line. 316 wetted parts fine. Standard accuracy ok.`,
+`Quote needed: 3 inch flanged mag flow meter, explosion proof. Process is 50% nitric acid at about 80°C. HART output.`,
+`Hi - need a gauge pressure transmitter for a 0 to 100 psi range, HART output, 1/2" NPT female process connection. Explosion-proof area. Thanks`,
+`Hi Dan - putting together an RFQ for the new skid at our Ottumwa plant, everything's in a classified area so all explosion-proof please. I need: (1) a 2-inch wafer mag meter for city water, (2) a 4-inch flanged mag meter on the same water line, and (3) a gauge pressure transmitter for the pump discharge, 0-150 psi, 1/2" NPT. HART on all of them. Thanks!`
+];
+function fillEx(i){document.getElementById('inq').value=EX[i];}
+</script>
+</body>
+</html>

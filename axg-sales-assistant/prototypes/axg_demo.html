@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Allied AXG Sales Assistant — Inquiry to Draft</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --panel:#15181c; --panel2:#1c2025; --panel3:#23282e;
+    --paper:#f3efe6; --ink:#21262d; --inkmute:#5d6470;
+    --line:rgba(255,255,255,.09); --linep:rgba(0,0,0,.10);
+    --signal:#f0a838;      /* customer input */
+    --deflt:#46a4bd;       /* allied default */
+    --rule:#6cae73;        /* rule-forced */
+    --flag:#e3623c;        /* warning / escalate */
+    --mute:#878e98;
+    --txt:#dfe3e8;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+    --disp:'Space Grotesk',system-ui,sans-serif;
+    --body:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--panel);color:var(--txt);font-family:var(--body);line-height:1.5;
+    background-image:linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);
+    background-size:32px 32px;}
+  .wrap{max-width:1000px;margin:0 auto;padding:32px 20px 80px}
+
+  /* header */
+  header{border-bottom:1px solid var(--line);padding-bottom:22px;margin-bottom:26px}
+  .kick{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--signal);margin:0 0 10px}
+  h1{font-family:var(--disp);font-weight:600;font-size:clamp(26px,4.5vw,40px);letter-spacing:-.02em;margin:0;line-height:1.04}
+  .sub{color:var(--mute);max-width:62ch;margin:12px 0 0;font-size:15px}
+  .legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-family:var(--mono);font-size:11px;letter-spacing:.04em}
+  .legend span{display:inline-flex;align-items:center;gap:7px;color:var(--mute)}
+  .dot{width:9px;height:9px;border-radius:2px;display:inline-block}
+
+  /* scenario selector */
+  .scn{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:0 0 26px}
+  .scn button{all:unset;cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:13px 14px;
+    background:var(--panel2);transition:.18s;display:block}
+  .scn button:hover{border-color:rgba(240,168,56,.4);transform:translateY(-1px)}
+  .scn button.on{border-color:var(--signal);background:linear-gradient(180deg,rgba(240,168,56,.10),transparent)}
+  .scn .n{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--signal);text-transform:uppercase}
+  .scn .t{font-family:var(--disp);font-weight:500;font-size:14.5px;color:var(--txt);margin-top:5px;line-height:1.25}
+  .scn button:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+
+  /* paper card (emails) */
+  .paper{background:var(--paper);color:var(--ink);border-radius:10px;padding:22px 24px;
+    box-shadow:0 18px 40px -24px rgba(0,0,0,.7);position:relative}
+  .paper .meta{font-family:var(--mono);font-size:11px;color:var(--inkmute);letter-spacing:.03em;
+    border-bottom:1px solid var(--linep);padding-bottom:10px;margin-bottom:13px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .paper .body{font-size:14.5px;white-space:pre-wrap}
+  .paper .tag{position:absolute;top:-10px;left:20px;background:var(--ink);color:var(--paper);
+    font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:3px 10px;border-radius:4px}
+
+  /* pipeline */
+  .pipe{margin:26px 0 0;border-left:2px solid var(--line);padding-left:0}
+  .stage{position:relative;padding:0 0 4px 26px;margin-bottom:18px;opacity:0;transform:translateY(8px);
+    animation:rise .5s forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.stage{animation:none;opacity:1;transform:none}}
+  .stage::before{content:"";position:absolute;left:-7px;top:4px;width:12px;height:12px;border-radius:50%;
+    background:var(--panel);border:2px solid var(--mute)}
+  .stage.ok::before{border-color:var(--rule);background:var(--rule)}
+  .stage.warn::before{border-color:var(--flag);background:var(--flag)}
+  .stage h3{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin:0 0 9px;font-weight:500}
+  .stage .card{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:15px 17px}
+
+  /* extraction chips */
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-family:var(--mono);font-size:12px;background:var(--panel3);border:1px solid var(--line);border-radius:6px;padding:5px 10px}
+  .chip b{color:var(--signal);font-weight:600}
+  .chip.miss b{color:var(--flag)}
+
+  /* model code readout */
+  .codeline{font-family:var(--mono);font-size:clamp(15px,2.4vw,19px);font-weight:600;letter-spacing:.02em;
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;color:var(--mute);
+    word-break:break-word;line-height:2}
+  .seg{padding:2px 5px;border-radius:4px;margin:0 1px;display:inline-block;border-bottom:2px solid transparent}
+  .seg.cust{color:#13181c;background:var(--signal)}
+  .seg.def{color:#0e1417;background:var(--deflt)}
+  .seg.rule{color:#0e1714;background:var(--rule)}
+  .grid2{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:680px){.grid2{grid-template-columns:1fr 1fr}}
+
+  .row{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;padding:6px 0;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:0}
+  .row .k{font-family:var(--mono);font-size:11px;color:var(--mute);min-width:104px;letter-spacing:.04em;padding-top:2px}
+  .row .v{flex:1}
+  .v .src{font-family:var(--mono);font-size:10px;letter-spacing:.06em;padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:middle}
+  .src.cust{background:rgba(240,168,56,.16);color:var(--signal)}
+  .src.def{background:rgba(70,164,189,.16);color:var(--deflt)}
+  .src.rule{background:rgba(108,174,115,.18);color:var(--rule)}
+
+  .verdict{display:flex;gap:13px;align-items:flex-start;padding:13px 15px;border-radius:8px;font-size:14px}
+  .verdict.pass{background:rgba(108,174,115,.10);border:1px solid rgba(108,174,115,.3)}
+  .verdict.flag{background:rgba(227,98,60,.10);border:1px solid rgba(227,98,60,.35)}
+  .verdict .ic{font-family:var(--mono);font-weight:600;font-size:12px;padding:3px 8px;border-radius:5px;white-space:nowrap;margin-top:1px}
+  .verdict.pass .ic{background:var(--rule);color:#0e1714}
+  .verdict.flag .ic{background:var(--flag);color:#1a0f0c}
+  .verdict b{color:var(--txt)}
+
+  .q{font-size:13.5px;padding:7px 0 7px 18px;position:relative;border-bottom:1px solid var(--line)}
+  .q:last-child{border-bottom:0}
+  .q::before{content:"?";position:absolute;left:0;top:7px;font-family:var(--mono);color:var(--signal);font-weight:600}
+
+  footer{margin-top:30px;border-top:1px solid var(--line);padding-top:16px;color:var(--mute);font-size:12.5px;font-family:var(--mono);letter-spacing:.03em;display:flex;gap:9px;align-items:center}
+  .pulse{width:8px;height:8px;border-radius:50%;background:var(--rule);box-shadow:0 0 0 0 rgba(108,174,115,.6);animation:p 2.4s infinite}
+  @keyframes p{0%{box-shadow:0 0 0 0 rgba(108,174,115,.5)}70%{box-shadow:0 0 0 8px rgba(108,174,115,0)}100%{box-shadow:0 0 0 0 rgba(108,174,115,0)}}
+  .note{font-family:var(--body);font-size:13px;color:var(--mute);margin-top:7px}
+  .draftnote{font-family:var(--mono);font-size:11px;color:var(--flag);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+
+  .breakdown{margin-top:18px;border-top:1px solid var(--linep);padding-top:14px}
+  .pnbox{display:flex;flex-direction:column;gap:4px;background:#e9e3d5;border:1px solid rgba(0,0,0,.14);border-radius:7px;padding:11px 14px;margin-bottom:13px}
+  .pnlabel{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--inkmute)}
+  .pnval{font-family:var(--mono);font-weight:600;font-size:clamp(13px,2.5vw,15.5px);color:var(--ink);word-break:break-all;letter-spacing:.01em}
+  .pnnote{font-size:12px;color:#b8742e;font-style:italic;margin:-7px 0 13px}
+  .bk-title{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--inkmute);margin-bottom:10px}
+  .bk-tbl{display:flex;flex-direction:column}
+  .bk-row{display:grid;grid-template-columns:84px 1fr;gap:14px;padding:5px 0;border-bottom:1px solid rgba(0,0,0,.05);align-items:baseline}
+  .bk-row:last-child{border-bottom:0}
+  .bk-code{font-family:var(--mono);font-weight:600;font-size:13px;color:var(--ink)}
+  .bk-def{font-size:13.5px;color:#3a4049}
+  .bk-code.prov,.bk-def.prov{color:#b8742e;font-style:italic}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kick">Allied Instrumentation · Yokogawa AXG</p>
+    <h1>From inbox to drafted quote, with the reasoning shown</h1>
+    <p class="sub">A customer email goes in. The assistant extracts the spec, fills Allied's house defaults, enforces the datasheet's interlocks, runs the application gates, and drafts a reply — leaving a human to review and send. Pick an inquiry to watch it run.</p>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--signal)"></i>Customer specified</span>
+      <span><i class="dot" style="background:var(--deflt)"></i>Allied default</span>
+      <span><i class="dot" style="background:var(--rule)"></i>Forced by rule</span>
+      <span><i class="dot" style="background:var(--flag)"></i>Flag / escalate</span>
+    </div>
+  </header>
+
+  <div class="scn" id="scn"></div>
+  <div id="out"></div>
+
+  <footer>
+    <span class="pulse"></span>
+    Every output is a draft for human review. Nothing is sent automatically.
+  </footer>
+</div>
+
+<script>
+/* ---- verified data embedded from the truth-layer files ---- */
+const DEF = { construction:'A', lining:'A', electrode:'L', grounding:'2',
+  housing:'1', cableEntry:'2', accuracy:'B', power:'-1', comm:'JA',
+  wiring:'1', display:'1', optional:'/GRL' };
+const COND_FLOOR = [[2.5,10,5],[15,125,1],[150,400,3],[500,500,20]];
+const WARN_BAND = 10;
+const PERMEABLE = ['nitric','hydrofluoric','sodium hydroxide','caustic','black liquor'];
+const LAY = { // flanged, inches, nominal inch -> lay length
+  yokogawa:{2:7.78,3:7.78,4:9.74,6:11.71,8:13.68,10:17.54,12:19.51},
+  'Rosemount 8705':{2:7.87,3:7.87,4:9.84,6:11.81,8:13.78,10:15.00,12:18.01}
+};
+
+const SCN = [
+  {
+    n:'01', t:'Rosemount 10" retrofit',
+    from:'dave.k@northplant.com', subj:'Replacement for failed flow meter',
+    body:`Hi — we've got a Rosemount 8705 that finally died on a 10" line here at the plant. Flanged connections. It's on plant city water, normal pressure. We need 4-20mA with HART. General purpose area, nothing hazardous out there. Can you get me a quote on the Yokogawa equivalent? Trying to move fast on this one.\n\nThanks,\nDave`,
+    spec:{ size:'250 mm (10 in)', sizeIn:10, conn:'Flanged', xp:false, fluid:'city water',
+      output:'HART', area:'General purpose', competitor:'Rosemount 8705', temp:null },
+    cond:600, // city water typical
+    code:['AXG250','-G','A','000','BA1','A','L','2','1','2','B','-1','JA','1','1','/GRL'],
+    src:['cust','rule','def','rule','def','def','def','def','def','def','def','def','def','def','def','def'],
+    retrofit:true
+  },
+  {
+    n:'02', t:'2" XP wafer, HART',
+    from:'orders@brightchem.com', subj:'Mag meter quote',
+    body:`Need a 2" wafer mag, explosion proof, HART output, for a chemical transfer line. 316 wetted parts are fine for this service. Standard accuracy ok. What's the lead time?\n\nThanks`,
+    spec:{ size:'50 mm (2 in)', sizeIn:2, conn:'Wafer', xp:true, fluid:'(not named — "chemical transfer")',
+      output:'HART', area:'Explosion proof', competitor:null, temp:null },
+    cond:null,
+    code:['AXG050','-C','A','FF2','AA1','A','L','2','1','2','B','-1','JA','1','1','/GRL'],
+    src:['cust','cust','def','def','def','def','cust','def','def','rule','def','def','cust','def','def','def'],
+    retrofit:false
+  },
+  {
+    n:'03', t:'50% nitric acid, 80°C',
+    from:'eng@valleyprocess.com', subj:'Quote needed — acid line',
+    body:`Quote needed: 3 inch flanged mag flow meter, explosion proof. Process is 50% nitric acid at about 80°C. HART output. Let me know what you'd recommend for the wetted parts.\n\nThanks`,
+    spec:{ size:'80 mm (3 in)', sizeIn:3, conn:'Flanged', xp:true, fluid:'50% nitric acid',
+      output:'HART', area:'Explosion proof', competitor:null, temp:'80 °C' },
+    cond:400000,
+    code:['AXG080','-C','A','FF2','BA1','A','L*','2','1','2','B','-1','JA','1','1','/GRL'],
+    src:['cust','cust','def','def','def','def','def','def','def','rule','def','def','cust','def','def','def'],
+    retrofit:false, permeable:true
+  },
+  {
+    n:'04', t:'Ottumwa basin — real inquiry',
+    from:'engineer@prvn.com', subj:'Flow meter selection — Ottumwa basin pumping',
+    body:`Good morning Alan,\n\nI'm an engineer at PRVN working on a basin pumping project at Alliant Energy Ottumwa Generating Station. I'm selecting a magnetic flow meter for a 6-inch (non-potable) water line downstream of a pump and filter. We plan to reduce a section down to 4-inch to accommodate the meter, but that can be adjusted. Piping is all new, outdoors, plenty of straight run.\n\nThe pump draws from a rinse water basin and returns it to process. The water is relatively high pH with coal ash and other debris suspended/dissolved in it. Design flow is 600 gpm. Operating pressure ~30-40 psig, design ~150 psig. Operational temp 40-120°F, design min/max 32-150°F.\n\nLooking to turn something around by end of week. If you're not the right person, can you point me to who handles these?\n\nThanks`,
+    spec:{ size:'150 mm (6 in) recommended', sizeIn:6, conn:'Flanged', xp:false, fluid:'high-pH coal-ash rinse water (abrasive)',
+      output:'(not stated)', area:'Outdoor rinse-water basin', competitor:null, temp:'up to 150 °F (66 °C)' },
+    cond:5000, // high-TDS coal-ash water, conductive
+    flow:600, proposedIn:4, recommendIn:6, holdC:true, slurry:true, chloride:true,
+    code:['AXG150','-C','A','FF2','BA1','A','L','2','1','2','B','-1','JA','1','1','/GRL /HF2'],
+    src:['rule','def','def','def','def','def','def','def','def','def','def','def','def','def','def','rule'],
+    retrofit:false
+  }
+];
+const FIELD_LABELS = ['Size','Use','Constr','Explosion','Process Conn','Lining','Electrode','Grounding','Housing','Cable Entry','Accuracy','Power','Comm + I/O','Wiring','Display','Optional'];
+
+function condFloor(sz){ for(const[a,b,f] of COND_FLOOR) if(sz>=a&&sz<=b) return f; return null; }
+
+function el(tag,cls,html){ const e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e; }
+
+let delay=0;
+function stage(parent,cls,title,builder){
+  const s=el('div','stage '+(cls||'')); s.style.animationDelay=delay+'ms'; delay+=140;
+  s.appendChild(el('h3',null,title));
+  const c=el('div','card'); builder(c); s.appendChild(c);
+  parent.appendChild(s);
+}
+
+function render(i){
+  const s=SCN[i]; const out=document.getElementById('out'); out.innerHTML=''; delay=0;
+  document.querySelectorAll('.scn button').forEach((b,k)=>b.classList.toggle('on',k===i));
+
+  // inbound email
+  const paper=el('div','paper');
+  paper.appendChild(el('span','tag','Inbound'));
+  paper.appendChild(el('div','meta',`<span>From: ${s.from}</span><span>Subj: ${s.subj}</span>`));
+  paper.appendChild(el('div','body',s.body));
+  out.appendChild(paper);
+
+  const pipe=el('div','pipe'); out.appendChild(pipe);
+
+  /* 1 — extraction */
+  stage(pipe,'ok','Extracted spec',c=>{
+    const ch=el('div','chips');
+    const f=s.spec;
+    const add=(k,v,miss)=>ch.appendChild(el('div','chip'+(miss?' miss':''),`${k} <b>${v}</b>`));
+    add('size',f.size); add('connection',f.conn); add('area',f.area);
+    add('output',f.output); add('fluid',f.fluid, String(f.fluid).includes('not named'));
+    if(f.competitor) add('replacing',f.competitor);
+    add('temp', f.temp||'not stated', !f.temp);
+    c.appendChild(ch);
+  });
+
+  /* 2 — defaults applied */
+  stage(pipe,'ok','Allied defaults filled the silent positions',c=>{
+    let noteTxt='The customer named a few things. The house defaults filled the rest — only positions nobody specified.';
+    if(s.holdC) noteTxt='Allied always defaults to the explosion-proof build (-C / A / FF2) — it is safe in any area, while a general-purpose unit in a classified area is not. The agent HOLDS -C and confirms the area in the reply rather than guessing it down to general-purpose.';
+    const note=el('div','note',noteTxt);
+    c.appendChild(note);
+    if(s.holdC){
+      const ds=el('div','verdict pass'); ds.style.margin='12px 0';
+      ds.innerHTML='<span class="ic">FAIL-SAFE · HOLD -C</span><div>Area is unstated. Rather than infer general-purpose, the agent keeps the stocked <b>-C / FF2</b> build (safe anywhere) and asks the customer to confirm the area. Down-spec to -G happens only on an explicit instruction.</div>';
+      c.appendChild(ds);
+    }
+    const grid=el('div','grid2'); grid.style.marginTop='10px';
+    const colA=el('div'), colB=el('div');
+    s.code.forEach((v,k)=>{
+      const r=el('div','row');
+      r.appendChild(el('div','k',FIELD_LABELS[k]));
+      const src=s.src[k];
+      const label= src==='cust'?'customer':src==='rule'?'rule':'default';
+      r.appendChild(el('div','v',`<span style="font-family:var(--mono)">${v}</span><span class="src ${src}">${label}</span>`));
+      (k<8?colA:colB).appendChild(r);
+    });
+    grid.appendChild(colA); grid.appendChild(colB);
+    c.appendChild(note); c.appendChild(grid);
+  });
+
+  /* 3 — validation */
+  stage(pipe,'ok','Interlocks checked',c=>{
+    const lines=[];
+    if(s.spec.xp || s.holdC){
+      lines.push('Explosion code <b>FF2</b> → forces Use <b>-C</b> and Cable Entry <b>2 (NPT)</b> ✓ (both already set)');
+      lines.push('FF2 excludes EtherNet/IP & built-in grounding — selected build avoids them ✓');
+    } else {
+      lines.push('General-purpose → Use <b>-G</b>, Explosion <b>000</b> ✓');
+    }
+    lines.push(`Process connection <b>${s.code[4]}</b> valid at ${s.spec.size} ✓`);
+    const box=el('div'); box.style.fontSize='13.5px'; box.style.lineHeight='1.9';
+    lines.forEach(l=>{const d=el('div',null,l); box.appendChild(d);});
+    c.appendChild(box);
+  });
+
+  /* 3.5 — sizing / velocity (when flow given) */
+  if(s.flow){
+    const vAt=(d)=>+(0.4085*s.flow/(d*d)).toFixed(1);
+    const vProp=vAt(s.proposedIn), vRec=vAt(s.recommendIn);
+    stage(pipe,'warn','Sizing check · velocity',c=>{
+      const v=el('div','verdict flag');
+      v.innerHTML=`<span class="ic">RESIZE · ${s.proposedIn}" \u2192 ${s.recommendIn}"</span><div>At ${s.flow} gpm, the proposed <b>${s.proposedIn}"</b> meter runs <b>${vProp} ft/s</b> — too fast for abrasive coal-ash water (accelerated liner/electrode wear). Keep the full <b>${s.recommendIn}"</b> line and it runs <b>${vRec} ft/s</b>, which measures accurately and lasts. <b>A mag meter doesn't need the reduction.</b></div>`;
+      c.appendChild(v);
+      if(s.slurry){
+        const sl=el('div','verdict pass'); sl.style.marginTop='10px';
+        sl.innerHTML='<span class="ic">SLURRY · /HF2</span><div>Suspended ash \u2192 add Enhanced Dual Frequency Excitation (<b>/HF2</b>), built to keep the reading stable in noisy/slurry fluids.</div>';
+        c.appendChild(sl);
+      }
+    });
+  }
+
+  /* 4 — application gates */
+  const floor = condFloor(s.spec.sizeIn>=10? (s.spec.sizeIn*25):(s.spec.sizeIn===2?50:(s.spec.sizeIn===3?80:s.spec.sizeIn))); // map nominal->mm-ish for floor
+  // use real mm:
+  const mm = {2:50,3:80,10:250}[s.spec.sizeIn];
+  const realFloor = condFloor(mm);
+  const isPermeable = s.permeable;
+  const gateWarn = isPermeable || !s.spec.temp || String(s.spec.fluid).includes('not named') || s.cond==null || s.chloride;
+  stage(pipe, gateWarn?'warn':'ok','Application gates',c=>{
+    // conductivity
+    const cv=el('div','verdict '+ (s.cond!=null && s.cond>=WARN_BAND ?'pass':'flag'));
+    if(s.cond!=null){
+      if(s.cond>=WARN_BAND){
+        cv.innerHTML=`<span class="ic">CONDUCTIVITY · PASS</span><div>${s.spec.fluid} ≈ <b>${s.cond.toLocaleString()} µS/cm</b>, above the ${realFloor} µS/cm floor for ${s.spec.size} and clear of the 10 µS/cm caution band.</div>`;
+      } else {
+        cv.innerHTML=`<span class="ic">CONDUCTIVITY · CAUTION</span><div>Below the 10 µS/cm band — low-conductivity handling applies. Flag for engineer.</div>`;
+      }
+    } else {
+      cv.innerHTML=`<span class="ic">CONDUCTIVITY · ASK</span><div>Conductivity not stated — required to confirm the meter can measure this fluid.</div>`;
+    }
+    c.appendChild(cv);
+    // compatibility
+    const comp=el('div','verdict '+(isPermeable||!s.spec.temp||String(s.spec.fluid).includes('not named')?'flag':'pass'));
+    comp.style.marginTop='10px';
+    if(isPermeable){
+      comp.innerHTML=`<span class="ic">COMPATIBILITY · ESCALATE</span><div><b>${s.spec.fluid} at ${s.spec.temp}</b> is a permeable, aggressive fluid. 316L electrode (default) must be verified against the chemical-resistance reference — <b>not auto-quoted</b>. Recommend Vent Hole <b>/H</b>, acid-resistant gasket <b>/GC</b>; block electrode-type & built-in grounding. Route to engineering.</div>`;
+    } else if(String(s.spec.fluid).includes('not named')){
+      comp.innerHTML=`<span class="ic">COMPATIBILITY · ASK</span><div>Fluid not named — the wetted-materials check (electrode, lining, ring) can't run without it. Must ask before confirming materials.</div>`;
+    } else if(!s.spec.temp){
+      comp.innerHTML=`<span class="ic">COMPATIBILITY · ASK</span><div>${s.spec.fluid} is benign with 316L/PFA at ambient, but <b>process temperature wasn't stated</b> — compatibility is temperature-dependent, so the gate asks before confirming.</div>`;
+    } else if(s.chloride){
+      comp.className='verdict flag';
+      comp.innerHTML=`<span class="ic">COMPATIBILITY · CONFIRM</span><div>${s.spec.fluid} with 316L/PFA is generally fine to ${s.spec.temp}, but high pH plus possible <b>chlorides</b> in basin water warrants confirming chloride level before locking the electrode. One targeted question, not a blocker.</div>`;
+    } else {
+      comp.innerHTML=`<span class="ic">COMPATIBILITY · PASS</span><div>${s.spec.fluid} compatible with 316L electrode, PFA lining, 316L rings at ${s.spec.temp}.</div>`;
+    }
+    c.appendChild(comp);
+  });
+
+  /* 5 — model code readout (signature) */
+  stage(pipe,'ok','Assembled model code',c=>{
+    const line=el('div','codeline');
+    s.code.forEach((v,k)=>{ const sp=el('span','seg '+s.src[k], v); line.appendChild(sp); if(k<s.code.length-1) line.appendChild(document.createTextNode(' ')); });
+    c.appendChild(line);
+    const note=el('div','note', s.permeable
+      ? 'The L* electrode is provisional — held pending the compatibility review above. Everything else is validated.'
+      : 'Every position is either the customer\'s words, an Allied default, or forced by a datasheet rule. None are guessed.');
+    c.appendChild(note);
+  });
+
+  /* 6 — retrofit */
+  if(s.retrofit){
+    const y=LAY.yokogawa[s.spec.sizeIn], comp=LAY[s.spec.competitor][s.spec.sizeIn];
+    const d=+(y-comp).toFixed(2);
+    const tooLong = d>0.25;
+    stage(pipe, tooLong?'warn':'ok','Retrofit fit check',c=>{
+      const v=el('div','verdict '+(tooLong?'flag':'pass'));
+      if(tooLong){
+        v.innerHTML=`<span class="ic">SPOOL TOO SHORT</span><div>The AXG lay length is <b>${y}"</b> vs the ${s.spec.competitor}'s <b>${comp}"</b> — <b>${d>0?'+':''}${d}"</b> longer. The existing spool won't take it without modification. <b>Must flag this as added cost, not a clean drop-in.</b></div>`;
+      } else {
+        v.innerHTML=`<span class="ic">DROP-IN</span><div>AXG ${y}" vs ${comp}" — within ¼" tolerance. Fits the existing spool.</div>`;
+      }
+      c.appendChild(v);
+    });
+  }
+
+  /* 7 — open questions */
+  stage(pipe,'','Open questions for the reply',c=>{
+    const qs=[];
+    if(!s.spec.temp && !s.permeable) qs.push('Process temperature? (needed to complete the materials check)');
+    if(String(s.spec.fluid).includes('not named')) qs.push('What is the fluid? (drives the wetted-materials check)');
+    if(s.cond==null) qs.push('Fluid conductivity in µS/cm?');
+    if(s.permeable) qs.push('Confirm engineering sign-off on 316L vs 50% nitric @ 80°C — or upgrade electrode.');
+    if(s.chloride) qs.push('Chloride level in the basin water? (to confirm 316L electrode at this pH/temp)');
+    if(s.flow) qs.push(`Recommend keeping the line at ${s.recommendIn}" rather than reducing to ${s.proposedIn}" — confirm that works.`);
+    if(s.spec.output && s.spec.output.includes('not stated')) qs.push('Output/signal type — 4-20 mA + HART? Pulse output for totalizing?');
+    if(s.holdC) qs.push('Confirm area classification — we\'ve quoted explosion-proof (safe anywhere); say the word to down-spec to general-purpose.');
+    if(s.flow) qs.push('Power available — 120 VAC or 24 VDC loop?');
+    if(s.retrofit) qs.push('Existing spool is ~2.5" short for the AXG — confirm you can modify the piping, or we look at alternatives.');
+    qs.push('Integral mount, or remote sensor + transmitter?');
+    qs.forEach(q=>c.appendChild(el('div','q',q)));
+  });
+
+  /* drafted reply */
+  const reply=el('div','paper'); reply.style.marginTop='26px';
+  reply.appendChild(el('span','tag','Drafted reply · for review'));
+  reply.appendChild(el('div','meta',`<span>To: ${s.from}</span><span>Re: ${s.subj}</span>`));
+  reply.appendChild(el('div','draftnote','▲ Draft — review before sending'));
+  reply.appendChild(el('div','body', draftFor(s)));
+  reply.appendChild(buildBreakdown(s));
+  out.appendChild(reply);
+}
+
+/* plain-English, customer-facing definition per position */
+function defOf(idx, val, s){
+  const v=val.trim();
+  switch(idx){
+    case 0: return (s.spec.size.replace(' recommended','')) + ' line size';
+    case 1: return v==='-C' ? 'Explosion-proof construction (FM rated; safe in any area)' : 'General-purpose construction';
+    case 2: return v==='A' ? 'Integral mount (transmitter on the meter)' : 'Remote-mount sensor';
+    case 3: return v==='FF2' ? 'FM flameproof certification' : (v==='000'?'No explosion certification (general-purpose)':'Explosion certification');
+    case 4: return v.startsWith('B') ? 'ASME Class 150 flanged connection, 316 stainless'
+             : v.startsWith('A') ? 'ASME Class 150 wafer connection, 316 stainless' : 'Process connection';
+    case 5: return 'PFA liner (chemical- and abrasion-resistant)';
+    case 6: return v==='L' ? '316L stainless steel electrodes'
+             : v==='L*' ? 'Electrode material — to be confirmed (pending materials review)' : 'Electrodes';
+    case 7: return 'Grounding rings included';
+    case 8: return 'Standard housing and coating';
+    case 9: return '1/2" NPT conduit entry';
+    case 10: return 'Standard accuracy';
+    case 11: return '100–240 VAC power';
+    case 12: return 'HART communication + 4–20 mA output';
+    case 13: return 'Screw-type wiring terminals';
+    case 14: return 'Display, English';
+    case 15: return null; // handled per optional code
+  }
+}
+const OPT_DEF={'/GRL':'316L grounding rings (matched to the electrodes)','/HF2':'Enhanced dual-frequency excitation (for slurry / noisy fluids)'};
+
+function buildBreakdown(s){
+  const wrap=el('div','breakdown');
+  // ERP part number: concatenate all positions, no separators, preserving each code's own hyphen
+  const prov = s.code.some(v=>v.includes('*'));
+  const pn = s.code.map(v=>v.includes('*')?'[#]':v).join('').replace(/\s+/g,'');
+  const pnBox=el('div','pnbox');
+  pnBox.innerHTML=`<span class="pnlabel">Part number${prov?' · provisional':''}</span><span class="pnval">${pn}</span>`;
+  wrap.appendChild(pnBox);
+  if(prov) wrap.appendChild(el('div','pnnote','Part number finalizes once the electrode material is confirmed.'));
+  wrap.appendChild(el('div','bk-title','What this configuration means'));
+  const tbl=el('div','bk-tbl');
+  s.code.forEach((val,idx)=>{
+    if(idx===15){ // optional position can hold multiple /codes
+      val.trim().split(/\s+/).forEach(code=>{
+        if(!code) return;
+        const r=el('div','bk-row');
+        r.appendChild(el('div','bk-code',code));
+        r.appendChild(el('div','bk-def',OPT_DEF[code]||'Optional specification'));
+        tbl.appendChild(r);
+      });
+      return;
+    }
+    const r=el('div','bk-row');
+    const prov = val.includes('*');
+    r.appendChild(el('div','bk-code'+(prov?' prov':''), val.replace('*','')));
+    r.appendChild(el('div','bk-def'+(prov?' prov':''), defOf(idx,val,s)));
+    tbl.appendChild(r);
+  });
+  wrap.appendChild(tbl);
+  return wrap;
+}
+
+function draftFor(s){
+  if(s.flow){
+    return `Good morning,\n\nThanks for the detailed write-up — that's most of what I need, and end of week is workable. And yes, I handle these, so you're in the right place.\n\nOne recommendation up front that may save you trouble: I'd suggest NOT reducing the line to 4" for the meter. A magnetic flowmeter doesn't need the reduction, and with the coal ash in your water the smaller bore works against you — at 600 gpm a 4" meter runs about 15 ft/s, which accelerates liner and electrode wear in abrasive service. Left at your 6" line size the meter sees about 6.8 ft/s, which measures just as accurately and holds up far better. I'd spec a 6" unit.\n\nFor the application: a Yokogawa AXG, PFA-lined, 316L electrodes, ASME Class 150 flanges (your 150 psig design is well within Class 150), with grounding rings. Given the suspended ash I'd add the enhanced dual-frequency excitation option — it keeps the reading stable in slurry. Your temperature range is no issue for these materials. Here's the full configuration, with each line explained just below this note.\n\nA note on that build: I've quoted our standard explosion-proof (FM) build, which is safe in any area. If this location is general-purpose (non-hazardous), just say so and I'll adjust to a general-purpose unit — but the explosion-proof version covers you either way.\n\nA few questions to finalize:\n  • Output — 4-20 mA with HART, and do you want a pulse output for totalizing?\n  • Area classification — general-purpose, or is it classified?\n  • Power at the meter — 120 VAC or 24 VDC?\n  • Integral-mount or remote-mount transmitter?\n  • Any idea of the chloride level in the basin water? At your pH/temp 316L should be fine, but I'd confirm if chlorides run high.\n\nI'll send a formal quote once I have those.\n\nBest regards,\nAlan`;
+  }
+  if(s.retrofit){
+    return `Hi Dave,\n\nHappy to help with the Rosemount 8705 replacement. The Yokogawa AXG equivalent for your 10" flanged city-water line is laid out line by line below.\n\nOne thing to flag up front: the AXG's lay length is 17.54", versus 15.0" on the 8705 you're replacing — about 2.5" longer. Your existing spool will be too short for a straight drop-in, so we'd need to plan on lengthening the piping. Wanted to raise that now rather than at install.\n\nTo finish the quote: what's the process temperature, and is an integral mount fine or do you need a remote transmitter?\n\nBest regards,\nAllied Instrumentation`;
+  }
+  if(s.permeable){
+    return `Hello,\n\nThanks for the inquiry on the 3" explosion-proof line. Before quoting wetted parts, the 50% nitric acid at 80°C needs a materials review — at that concentration and temperature, standard 316L isn't something we'll confirm without checking it against our chemical-resistance data, so I'm routing that to engineering.\n\nWhat I can say now: for a permeable acid like this we'd add the Vent Hole option (/H) and an acid-resistant gasket (/GC), and we'd avoid electrode-type grounding. The base configuration is set out below, with the electrode held pending that review.\n\nI'll come back with the confirmed electrode/lining recommendation shortly.\n\nBest regards,\nAllied Instrumentation`;
+  }
+  return `Hello,\n\nThanks for the inquiry. Here's the AXG configuration for a 2" explosion-proof wafer mag with HART, set out line by line below.\n\nThat's built and validated — explosion-proof (FM), 316L electrode as you noted, HART output.\n\nTo finalize and confirm the wetted materials, a couple of quick questions: what's the fluid and its process temperature, and roughly what conductivity? Those let us confirm the electrode and lining are right for the service.\n\nBest regards,\nAllied Instrumentation`;
+}
+
+/* build scenario buttons */
+const scn=document.getElementById('scn');
+SCN.forEach((s,i)=>{
+  const b=el('button'); b.innerHTML=`<span class="n">Inquiry ${s.n}</span><span class="t">${s.t}</span>`;
+  b.onclick=()=>render(i); scn.appendChild(b);
+});
+render(0);
+</script>
+</body>
+</html>
