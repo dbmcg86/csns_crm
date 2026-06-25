@@ -13,6 +13,17 @@ drafts for human review.
 
 ```
 axg-sales-assistant/
+├── PLAN.md            Implementation plan + phased build status
+│
+├── engine/           ▶ Phase 1 — deterministic configurator (TypeScript, zero-dep, tested)
+│                     Assembles + validates the AXG model code from the JSON truth layer.
+│                     No LLM. See engine/README.md (incl. a CLI: `node demo.ts`).
+│
+├── llm/              ▶ Phase 2/3 — the language layer (TypeScript, uses @anthropic-ai/sdk)
+│                     extract email → AxgInquiry, then phrase a reply from the engine's
+│                     result. The LLM never produces a fact. See llm/README.md
+│                     (CLI: `node run.ts`; offline tests: `npm test`).
+│
 ├── prototypes/        Self-contained HTML prototypes (open in a browser)
 │   ├── axg_quoting_tool.html      Live quoting assistant — paste an inquiry, get a model
 │   │                              code + ERP part number. Covers AXG mag meters, EJA530E

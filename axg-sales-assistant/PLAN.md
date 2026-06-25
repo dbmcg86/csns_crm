@@ -22,13 +22,15 @@ phrase a reply from a structured result packet. It never produces a fact.
 | Phase | What | LLM? | Status |
 |---|---|---|---|
 | 0 | Data prep — capture the truth layer | no | ✅ done (6 JSON files in `data/`) |
-| **1** | **Deterministic configurator engine + tests** | **no** | **▶ in progress** |
-| 2 | Email extraction → structured spec | yes | later |
-| 3 | Draft assembly (email in → spec + code + questions out) | yes | later |
-| 4 | UI + expand to next instrument (EJA) | — | later |
+| 1 | Deterministic configurator engine + tests | no | ✅ done (`engine/`, 11 tests + CLI) |
+| 2 | Email extraction → structured spec | yes | ✅ done (`llm/src/extract.ts`) |
+| 3 | Draft assembly (email in → spec + code + questions out) | yes | ✅ done (`llm/src/pipeline.ts`) |
+| 4 | UI + expand to next instrument (EJA) | — | ▶ next |
 
-We are building **Phase 1** now. It is the "trust foundation": pure logic, no network,
-fully deterministic, fully unit-testable.
+Phases 1–3 are built. The engine is the deterministic "trust foundation"; the language
+layer (Phase 2/3) brackets it — extract before, reply after — so the LLM never produces a
+fact. Phase 4 (a Next.js UI wired to the engine, then porting EJA/VY into the same result
+contract) is next.
 
 ## Phase 1 scope (this deliverable)
 
