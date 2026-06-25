@@ -25,15 +25,22 @@ axg-sales-assistant/
 │                                  human can verify before onboarding a new instrument.
 │
 ├── data/              The truth layer (verified reference data the engine reads from)
-│   ├── axg_model_code.json        AXG mag meter: 16 ordered positions, allowed codes,
-│   │                              cross-position interlocks, Allied house defaults (each
-│   │                              source-tagged), companion items, optional codes, and the
-│   │                              full explosion-protection restriction table.
-│   ├── eja530e_model_code.json    EJA530E pressure transmitter model code + defaults.
-│   ├── vy_model_code.json         VY vortex flowmeter model code + defaults.
-│   └── valve_rules.json           Quarter-turn valve assemblies: torque tables, actuator
-│                                  outputs, severe-service factors, field-proven stock
-│                                  builds, trim packages, verified assembly numbers.
+│   ├── axg_model_code.json          AXG mag meter: 16 ordered positions, allowed codes,
+│   │                                cross-position interlocks, Allied house defaults (each
+│   │                                source-tagged), companion items, optional codes, and the
+│   │                                full explosion-protection restriction table.
+│   ├── axg_application_rules.json   AXG tribal knowledge in 5 buckets: disqualifying
+│   │                                questions, application rules, never-order list,
+│   │                                fluid→material (incl. the mandatory compatibility gate),
+│   │                                and red flags.
+│   ├── axg_dimensions_retrofit.json AXG lay lengths + grounding-ring additions, competitor
+│   │                                cross-reference, fit-verdict logic, and the wafer
+│   │                                replacement model.
+│   ├── eja530e_model_code.json      EJA530E pressure transmitter model code + defaults.
+│   ├── vy_model_code.json           VY vortex flowmeter model code + defaults.
+│   └── valve_rules.json             Quarter-turn valve assemblies: torque tables, actuator
+│                                    outputs, severe-service factors, field-proven stock
+│                                    builds, trim packages, verified assembly numbers.
 │
 └── docs/
     ├── AXG_Sales_Assistant_Pilot_Spec.md   The product spec: the two-layer architecture
@@ -47,13 +54,13 @@ axg-sales-assistant/
 
 ## Truth-layer files
 
-The configurator/model-code truth layers are now captured: `axg_model_code.json`,
-`eja530e_model_code.json`, `vy_model_code.json`, and `valve_rules.json`.
+The full truth layer the spec describes is now captured:
 
-Two files referenced by the spec and prototypes are **not yet in this repo**:
-
-- `axg_dimensions_retrofit.json` — lay lengths + competitor cross-reference for retrofit fit
-- `axg_application_rules.json` — application gates (conductivity, compatibility, red flags)
+- **AXG mag meter** (the pilot): `axg_model_code.json` + `axg_application_rules.json` +
+  `axg_dimensions_retrofit.json`
+- **EJA530E** pressure transmitter: `eja530e_model_code.json`
+- **VY** vortex flowmeter: `vy_model_code.json`
+- **Quarter-turn valves**: `valve_rules.json`
 
 In the prototypes the AXG/EJA/VY data is currently *inlined* as JavaScript constants (e.g.
 `DEF`, `COND_FLOOR`, `LAY`, `CAPSULES`, `VY_DEF`) rather than read from these JSON files.

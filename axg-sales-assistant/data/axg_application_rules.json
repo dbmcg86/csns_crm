@@ -1,0 +1,203 @@
+{
+  "_meta": {
+    "asset": "AXG Application Rules / Tribal Knowledge Base",
+    "purpose": "The knowledge the datasheet does NOT give you directly: disqualifying questions, application suitability, red flags, and house judgment. This is what makes the agent better than reading the manual, and what protects against confident-but-wrong quotes.",
+    "structure": "Organized into five buckets. Seeded with the fluid-conductivity rule set; remaining buckets are stubbed to be filled in tribal-knowledge sessions.",
+    "status": "IN PROGRESS - conductivity captured; other buckets pending",
+    "companion_files": ["axg_model_code.json (configurator)", "axg_dimensions_retrofit.json (fitment + retrofit)"]
+  },
+
+  "bucket_1_disqualifying_questions": {
+    "_note": "Questions an experienced salesperson always asks that a customer rarely volunteers. These drive the agent's smart-question list.",
+    "questions": [
+      {
+        "id": "fluid_conductivity",
+        "ask": "What is the fluid's electrical conductivity (in microS/cm)?",
+        "why": "A magnetic flowmeter cannot measure below a minimum conductivity, and the minimum is size-dependent. Customers almost never state this unprompted.",
+        "always_ask": true,
+        "drives_rules": ["min_conductivity_by_size", "low_conductivity_warning_band", "remote_sensor_cable_conductivity", "empty_pipe_detection_conductivity"]
+      },
+      {
+        "id": "pipe_material",
+        "ask": "Is the process pipe bare metal, or plastic / lined?",
+        "why": "Determines whether a grounding device is needed at all (skippable on bare metal, mandatory on plastic/lined) - so it governs the grounding-rings default.",
+        "always_ask": true,
+        "drives_rules": ["grounding_unnecessary_on_bare_metal_pipe", "grounding_mandatory_on_lined_or_plastic_pipe"]
+      },
+      {
+        "id": "fluid_type",
+        "ask": "What is the fluid / chemical being measured?",
+        "why": "Triggers the mandatory wetted-materials compatibility gate (electrode, lining, grounding ring). Without it, material selection is a guess.",
+        "always_ask": true,
+        "drives_rules": ["wetted_materials_chemical_temperature_check", "permeable_fluid_grounding_exclusion"]
+      },
+      {
+        "id": "process_temperature",
+        "ask": "What is the process (fluid) temperature, including maximum?",
+        "why": "Material compatibility is a function of chemical AND temperature. The compatibility gate cannot be completed without it; many materials are compatible cold and fail hot.",
+        "always_ask": true,
+        "drives_rules": ["wetted_materials_chemical_temperature_check"]
+      },
+      {
+        "id": "design_flow_rate",
+        "ask": "What is the design flow rate (gpm), and the line size?",
+        "why": "Needed to compute flow velocity and size the meter correctly - critical for abrasive/slurry fluids where velocity drives wear, and to advise on whether a line reduction is wise.",
+        "always_ask": true,
+        "drives_rules": ["velocity_sizing"]
+      }
+    ],
+    "_pending": ["is the pipe always full?", "hazardous-area classification", "line pressure", "slurry / abrasive content"]
+  },
+
+  "bucket_2_application_rules": {
+    "_note": "How an answer turns into a decision. Each rule is typed: hard_rule (disqualifier), warning (proceed with care), interlock (depends on another choice), feature_dependency.",
+    "rules": [
+      {
+        "id": "min_conductivity_by_size",
+        "type": "hard_rule",
+        "parameter": "fluid_conductivity",
+        "summary": "Minimum measurable conductivity, by line size. Below the threshold the meter will not read.",
+        "thresholds": [
+          {"size_range": "2.5 to 10 mm (0.1 to 0.4 in)", "min_uS_cm": 5},
+          {"size_range": "15 to 125 mm (0.5 to 5 in)",   "min_uS_cm": 1},
+          {"size_range": "150 to 400 mm (6 to 16 in)",   "min_uS_cm": 3},
+          {"size_range": "500 mm (20 in)",               "min_uS_cm": 20}
+        ],
+        "note": "Counterintuitive: the floor is LOWEST in the mid-range (1) and rises at both the small (5) and large (3, then 20) extremes. The agent must look this up against the selected size, never carry a single number.",
+        "below_threshold_action": "DISQUALIFY. The meter will not measure. Do not quote; escalate to an engineer and/or propose an alternative measurement technology.",
+        "source": "datasheet GS 01E22A01-01EN, 'Fluid Conductivity'"
+      },
+      {
+        "id": "low_conductivity_warning_band",
+        "type": "warning",
+        "parameter": "fluid_conductivity",
+        "threshold_uS_cm": 10,
+        "summary": "Allied warning band (set 2026-06-10): any fluid below 10 microS/cm (but at/above its size minimum) is a low-conductivity application - it clears the hard floor but is NOT a clean auto-quote.",
+        "logic": "If conductivity < size minimum -> DISQUALIFY (hard rule). If size minimum <= conductivity < 10 -> WARNING (this band). If conductivity >= 10 -> proceed (re: conductivity).",
+        "edge_case": "For 500 mm, the hard size minimum is 20 microS/cm, which already exceeds 10 - so any 500 mm build that clears its floor is automatically above the warning band. The band only bites on sizes whose floor is below 10 (i.e. all sizes except 500 mm).",
+        "action": "Flag for engineer review. Special selection and installation considerations apply (signal cabling, grounding, possible remote-sensor cable-length penalty). Reference 'Cautions on Selection and Installation'.",
+        "source": "Allied-set threshold; datasheet note: 'For measuring low conductivity fluids, read Cautions on Selection and Installation'"
+      },
+      {
+        "id": "remote_sensor_cable_conductivity",
+        "type": "interlock",
+        "parameters": ["construction", "fluid_conductivity", "signal_cable_length"],
+        "summary": "For REMOTE SENSOR builds, the effective minimum conductivity rises with signal cable length, and near the limit an accuracy penalty of up to +1% of rate applies.",
+        "action": "If remote sensor + marginal conductivity + long cable run: check the cable-length-vs-conductivity curve, warn on accuracy, and consider whether an INTEGRAL mount removes the problem.",
+        "source": "datasheet 'Signal Cable Length and Fluid Conductivity (Remote Sensor)'"
+      },
+      {
+        "id": "empty_pipe_detection_conductivity",
+        "type": "feature_dependency",
+        "parameter": "fluid_conductivity",
+        "summary": "Empty-pipe detection requires 50 microS/cm or more - far above the basic measurement floor.",
+        "action": "If the customer wants empty-pipe detection, confirm conductivity >= 50 microS/cm. A low-conductivity fluid plus empty-pipe-detection is a conflict to raise up front.",
+        "source": "datasheet GS 01E22A01-01EN"
+      },
+      {
+        "id": "velocity_sizing",
+        "type": "sizing_rule",
+        "parameter": "flow_rate + line_size",
+        "summary": "Size the meter to a sensible flow VELOCITY, not just to match the line. Velocity (ft/s) = 0.4085 * gpm / (diameter_in^2).",
+        "target_bands": "General service ~3-15 ft/s (ideal 3-10). Abrasive/slurry service: keep LOWER, ideally under ~7 ft/s, to limit liner and electrode wear. Below ~1.5 ft/s is too slow (weak low-flow performance).",
+        "key_insight": "A mag meter does NOT need the line reduced to a smaller meter. Reducing the bore RAISES velocity - the wrong direction for abrasive fluids. The right answer is often to keep the full line size.",
+        "worked_example": "600 gpm: at 4 in -> 15.3 ft/s (too fast for abrasive coal-ash water); at 6 in -> 6.8 ft/s (good). Recommend 6 in.",
+        "action": "Compute velocity at the proposed size. For abrasive fluid at high velocity, recommend the larger / full line size and explain why. Lead the reply with this when the customer proposed a reduction.",
+        "source": "Allied / general mag-meter sizing practice; surfaced by the Ottumwa inquiry 2026-06-10."
+      }
+    ]
+  },
+
+  "bucket_3_never_order_list": {
+    "_note": "Combinations the configurator allows but Allied would talk a customer out of, or that depend on context. These become 'allowed-with-warning' or conditional deviation cases.",
+    "entries": [
+      {
+        "id": "grounding_unnecessary_on_bare_metal_pipe",
+        "rule": "On UNLINED metal piping, a grounding device is unnecessary - bond the pipe to the sensor flange (mini-flange, or one-piece casting on wafer type) with a customer-supplied grounding wire instead.",
+        "refines_default": "The /GRL grounding-rings default applies to plastic/lined piping. On bare metal pipe, rings are skippable. The agent should ASK pipe material before reflexively adding rings.",
+        "source": "datasheet Cautions on Selection and Installation"
+      },
+      {
+        "id": "grounding_mandatory_on_lined_or_plastic_pipe",
+        "rule": "On plastic or lined piping, a grounding device MUST be selected. Not optional.",
+        "source": "datasheet"
+      },
+      {
+        "id": "thick_ring_for_high_torque_flanges",
+        "rule": "For high-pressure / high-tightening-torque flanges (ASME Class 300, EN PN40, etc.), the THICK-type grounding ring is recommended over thin-type.",
+        "refines_default": "Default /GRL is THIN type - correct for standard Class 150 (AA1/BA1). If the build moves to Class 300 / PN40, switch the ring recommendation to thick type.",
+        "source": "datasheet"
+      },
+      {
+        "id": "builtin_electrode_lower_leak_risk_large_lined",
+        "rule": "Built-in grounding electrodes (sizes 150 to 400 mm) have fewer fluid seals than grounding rings, so lower leakage risk on plastic/lined piping. A tiebreaker for large lined-pipe applications.",
+        "source": "datasheet"
+      }
+    ]
+  },
+
+  "bucket_4_fluid_to_material": {
+    "_note": "Which electrode/lining/grounding to choose by fluid. Datasheet lists what is AVAILABLE; this records what is APPROPRIATE. Highest-value bucket.",
+    "mandatory_compatibility_gate": {
+      "id": "wetted_materials_chemical_temperature_check",
+      "type": "hard_gate",
+      "severity": "CRITICAL - wetted-materials safety. Failure mode is a hazardous-chemical leak, not a bad reading.",
+      "trigger": "ANY named chemical/fluid in the inquiry.",
+      "rule": "When a chemical is named, the agent MUST verify compatibility of every wetted part against that chemical AT the stated process temperature - not at ambient. Compatibility is a property of chemical + temperature together; many materials (e.g. 316L) are compatible cold and fail hot.",
+      "wetted_parts_to_check": [
+        {"part": "Electrode", "default": "L (316L) - the Allied default; first thing a chemical may rule out"},
+        {"part": "Lining", "default": "PFA (only lining on primary table) - wetted, must be checked too"},
+        {"part": "Grounding ring", "default": "/GRL (316L) - often same alloy as electrode; a chemical that rules out 316L rules out BOTH the default electrode and the default ring at once"}
+      ],
+      "temperature_cross_check": {
+        "step": "Explicit, separate step. Take the process temperature and re-verify each wetted material AT that temperature. The compatible-cold / incompatible-hot gap is where errors hide (note the permeable-fluid rule already singles out HIGH-TEMPERATURE sodium hydroxide).",
+        "if_temperature_missing": "Treat as a disqualifying question - the agent MUST ask process temperature, because the compatibility check cannot be completed without it."
+      },
+      "source_of_truth": "Compatibility MUST resolve against a verified chemical-resistance reference (manufacturer data, a vetted resistance chart, or Allied's own table) - NOT generated from model memory. The agent runs the check and cites the source; it does not decide compatibility on its own authority.",
+      "outcomes": {
+        "compatible_at_temp": "Proceed.",
+        "incompatible": "Block that material; propose an upgrade (e.g. 316L -> Hastelloy / tantalum / titanium per the chemical) AND flag the matching grounding-ring material change.",
+        "marginal_or_unverified": "Escalate to a human. Never auto-quote a marginal compatibility."
+      }
+    },
+    "entries": [
+      {
+        "id": "permeable_fluid_grounding_exclusion",
+        "type": "hard_exclusion",
+        "severity": "high - integrity/leakage, not just accuracy",
+        "rule": "Grounding-ring ELECTRODE type (GRP, GRT) and BUILT-IN grounding electrodes CANNOT be used with permeable fluids: nitric acid, hydrofluoric acid, high-temperature sodium hydroxide, and similar.",
+        "agent_action": "If the fluid is on/near the permeable list: (1) BLOCK electrode-type grounding rings (GRP/GRT) and built-in electrodes (GBP/GBT); (2) RECOMMEND the Vent Hole option (/H) - it is purpose-built for permeable fluids, letting permeated fluid escape between lining and measuring pipe (flange-type PFA, except high-pressure); (3) select an acid (/GC) or alkali (/GD) resistant gasket per the fluid; (4) flag for a full electrode + lining materials review.",
+        "interacts_with_default": "Default /GRL is PLATE type, so it is NOT excluded - but the presence of a permeable fluid should still trigger a materials review and the vent-hole recommendation.",
+        "mitigation_code": "/H (Vent Hole) - verified datasheet p.56",
+        "source": "datasheet Cautions on Selection and Installation"
+      },
+      {
+        "id": "pfa_lining_profile",
+        "type": "material_guidance",
+        "rule": "PFA lining: excellent chemical resistance; material is FDA-approved. Strong fit for food/pharma/hygienic and general chemical service. (PFA is the only lining on the primary AXG table.)",
+        "source": "datasheet"
+      },
+      {
+        "id": "ceramics_tube_profile",
+        "type": "material_guidance",
+        "rule": "Ceramics tube: excellent chemical, heat, AND abrasion resistance (high-purity alumina, serves as its own lining). Preferred for abrasive slurries and high-temperature service. (Separate AXG variant table, not the PFA-lining primary table.)",
+        "source": "datasheet"
+      }
+    ]
+  },
+
+  "bucket_5_red_flags": {
+    "_note": "Application signals that mean STOP - do not auto-quote, get an engineer involved. These key the PRD escalation behavior.",
+    "flags": [
+      {"signal": "Fluid conductivity at or near the size minimum", "action": "Do not auto-quote; engineer review (low-conductivity cautions)."},
+      {"signal": "Remote sensor + long cable run + marginal conductivity", "action": "Check cable-length curve; warn on accuracy penalty; consider integral mount."},
+      {"signal": "Empty-pipe detection requested on a sub-50 microS/cm fluid", "action": "Flag conflict; confirm conductivity before quoting the feature."},
+      {"signal": "Permeable fluid (nitric acid, hydrofluoric acid, hot sodium hydroxide, etc.)", "action": "Block electrode-type / built-in grounding; trigger full electrode + lining materials review."},
+      {"signal": "Size >= 250 mm (10 in) with low conductivity OR high-concentration slurry", "action": "Recommend remote transmitter (AXG1A / AXFA11G), not integral - flow noise concern."},
+      {"signal": "Cable length will exceed 100 m", "action": "Rules out AXG4A (100 m max); requires AXG1A or AXFA11G transmitter (200 m max). Quote the matching AX01C cable. See companion_items in axg_model_code.json."},
+      {"signal": "5 or more I/O terminals required", "action": "Use remote transmitter (AXG1A / AXFA11G)."},
+      {"signal": "Remote transmitter to be wall/panel mounted", "action": "Combine with AXG1A / AXFA11G remote transmitter rather than integral."}
+    ],
+    "_pending": ["empty / partially-full pipe", "coating / fouling fluids", "extreme process temperature"]
+  }
+}
