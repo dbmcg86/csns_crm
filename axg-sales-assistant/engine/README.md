@@ -13,6 +13,32 @@ cd axg-sales-assistant/engine
 npm test          # → node --test test/*.test.ts
 ```
 
+## Try it yourself (interactive)
+
+`demo.ts` is a personal test harness — throw inquiries at the real engine and see the
+validated output (model code with per-position provenance, part number, gates, flags,
+open questions):
+
+```bash
+cd axg-sales-assistant/engine
+
+node demo.ts                      # run all 4 built-in demo scenarios
+node demo.ts list                 # list the built-in scenarios
+node demo.ts scenario 3           # run one of them
+
+# build your own inquiry from flags:
+node demo.ts --size 6 --conn flange --area haz --fluid "nitric acid" --temp 80 --output HART
+node demo.ts --size 10 --conn wafer        # watch an illegal combo get BLOCKED
+node demo.ts --size 4 --conn flange --construction remote_axg1a   # remote → signal cable
+```
+
+Flags: `--size <in>` / `--size-mm <mm>`, `--conn wafer|flange`, `--rating 150|300`,
+`--area gp|haz` (omit = unstated → holds `-C`), `--fluid "…"`, `--temp <C>`,
+`--cond <µS/cm>`, `--flow <gpm>`, `--abrasive`, `--electrode "…"`,
+`--construction integral|remote_axg1a|remote_axg4a|remote_axfa11`,
+`--accuracy standard|high`, `--grounding yes|no`, `--power ac|dc_24`,
+`--competitor "rosemount_8705|foxboro|endress"`, `--output "…"`.
+
 ## Use it
 
 ```ts
