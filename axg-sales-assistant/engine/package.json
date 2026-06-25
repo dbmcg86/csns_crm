@@ -1,0 +1,10 @@
+{
+  "name": "axg-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic configurator engine for the AXG Sales Assistant (Pilot Spec Phase 1). Instrument-agnostic engine + JSON truth layer; assembles and validates model codes in code, never via an LLM.",
+  "scripts": {
+    "test": "node --test test/*.test.ts"
+  }
+}

@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The AXG engine is a standalone Node/TS package, linted on its own.
+    "axg-sales-assistant/**",
   ]),
 ]);
 
