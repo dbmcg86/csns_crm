@@ -1,0 +1,10 @@
+{
+  "name": "axg-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Web UI for the AXG Sales Assistant. A zero-dependency Node server (node:http) that serves a single page and runs the engine (no key) + the LLM pipeline (server-side, key required) behind it.",
+  "scripts": {
+    "start": "node server.ts"
+  }
+}

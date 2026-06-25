@@ -24,6 +24,11 @@ axg-sales-assistant/
 │                     result. The LLM never produces a fact. See llm/README.md
 │                     (CLI: `node run.ts`; offline tests: `npm test`).
 │
+├── web/              ▶ Phase 4 — web UI (zero-dep node:http server + one page)
+│                     Paste an email → runInquiry (server-side LLM), or "Build by
+│                     fields" → the engine directly (no key). See web/README.md
+│                     (`node server.ts` → http://localhost:8787).
+│
 ├── prototypes/        Self-contained HTML prototypes (open in a browser)
 │   ├── axg_quoting_tool.html      Live quoting assistant — paste an inquiry, get a model
 │   │                              code + ERP part number. Covers AXG mag meters, EJA530E
