@@ -23,13 +23,17 @@
 import { configureAxg } from './src/axg.ts';
 import type { AxgInquiry, EngineResult } from './src/types.ts';
 
+// Color only on an interactive terminal; honor NO_COLOR so piped/redirected
+// output stays clean plain text.
+const useColor = !!process.stdout.isTTY && !process.env.NO_COLOR;
+const paint = (code: string) => (s: string) => (useColor ? `\x1b[${code}m${s}\x1b[0m` : s);
 const C = {
-  dim: (s: string) => `\x1b[2m${s}\x1b[0m`,
-  bold: (s: string) => `\x1b[1m${s}\x1b[0m`,
-  green: (s: string) => `\x1b[32m${s}\x1b[0m`,
-  yellow: (s: string) => `\x1b[33m${s}\x1b[0m`,
-  red: (s: string) => `\x1b[31m${s}\x1b[0m`,
-  cyan: (s: string) => `\x1b[36m${s}\x1b[0m`,
+  dim: paint('2'),
+  bold: paint('1'),
+  green: paint('32'),
+  yellow: paint('33'),
+  red: paint('31'),
+  cyan: paint('36'),
 };
 
 const SOURCE_TAG: Record<string, (s: string) => string> = {
