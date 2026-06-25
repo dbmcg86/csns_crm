@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AXG Sales Assistant</title>
+<style>
+  :root{
+    --panel:#15181c;--panel2:#1c2025;--panel3:#23282e;--paper:#f3efe6;--ink:#21262d;--inkmute:#5d6470;
+    --line:rgba(255,255,255,.09);--signal:#f0a838;--deflt:#46a4bd;--rule:#6cae73;--flag:#e3623c;
+    --mute:#878e98;--txt:#dfe3e8;--mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+    --disp:system-ui,-apple-system,'Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--panel);color:var(--txt);font-family:var(--disp);line-height:1.5;
+    background-image:linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);background-size:32px 32px}
+  .wrap{max-width:980px;margin:0 auto;padding:30px 20px 80px}
+  header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:20px}
+  .kick{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--signal);margin:0 0 8px}
+  h1{font-weight:600;font-size:clamp(22px,4vw,32px);letter-spacing:-.02em;margin:0}
+  .sub{color:var(--mute);max-width:64ch;margin:10px 0 0;font-size:14px}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-family:var(--mono);font-size:11px}
+  .legend span{display:inline-flex;align-items:center;gap:6px;color:var(--mute)}
+  .dot{width:9px;height:9px;border-radius:2px;display:inline-block}
+  .banner{display:none;margin:0 0 16px;padding:11px 14px;border-radius:8px;font-size:13px;
+    background:rgba(240,168,56,.08);border:1px solid rgba(240,168,56,.35)}
+  .tabs{display:flex;gap:8px;margin-bottom:14px}
+  .tab{all:unset;cursor:pointer;font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--mute);
+    padding:8px 14px;border:1px solid var(--line);border-radius:7px}
+  .tab.on{color:#13181c;background:var(--signal);border-color:var(--signal)}
+  .card{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:16px}
+  textarea{width:100%;min-height:150px;background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    color:var(--txt);font-family:var(--disp);font-size:14.5px;padding:12px;resize:vertical}
+  textarea:focus,select:focus,input:focus{outline:2px solid var(--signal);outline-offset:1px}
+  label{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;color:var(--mute);text-transform:uppercase;display:block;margin-bottom:5px}
+  .mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .mfield input,.mfield select{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:6px;color:var(--txt);font-family:var(--disp);font-size:13px;padding:7px 9px}
+  .row-controls{display:flex;gap:10px;align-items:center;margin-top:13px;flex-wrap:wrap}
+  button.run{all:unset;cursor:pointer;background:var(--signal);color:#13181c;font-weight:600;font-size:14px;padding:9px 20px;border-radius:8px}
+  button.run:hover{filter:brightness(1.07)}
+  button.run:disabled{opacity:.5;cursor:default}
+  .ex{font-family:var(--mono);font-size:11.5px;color:var(--inkmute);margin-top:9px}
+  .ex a{color:var(--deflt);cursor:pointer;text-decoration:underline;margin-right:4px}
+  #status{font-family:var(--mono);font-size:12px;color:var(--mute)}
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(240,168,56,.3);border-top-color:var(--signal);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:7px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .out{margin-top:22px;display:flex;flex-direction:column;gap:16px}
+  .sec{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:15px 17px}
+  .sec h3{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin:0 0 11px;font-weight:500}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{font-family:var(--mono);font-size:12px;background:var(--panel3);border:1px solid var(--line);border-radius:6px;padding:4px 9px}
+  .chip b{color:var(--signal)}
+  .pn{font-family:var(--mono);font-weight:600;font-size:clamp(14px,2.4vw,17px);background:var(--panel);border:1px solid var(--line);
+    border-radius:8px;padding:13px 15px;word-break:break-all;color:var(--txt)}
+  .pn .prov{color:var(--flag);font-size:11px;margin-left:8px}
+  table.pos{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
+  table.pos td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.pos td.n{font-family:var(--mono);color:var(--mute);width:26px}
+  table.pos td.nm{color:var(--mute);width:160px}
+  table.pos td.cd{font-family:var(--mono);font-weight:600}
+  .src-customer{color:var(--signal)} .src-default{color:var(--mute)} .src-rule{color:var(--rule)} .src-provisional{color:var(--flag)}
+  td.de{color:var(--inkmute);color:#aab0b8}
+  .verdict{display:flex;gap:11px;align-items:flex-start;padding:10px 13px;border-radius:8px;font-size:13.5px;margin-bottom:8px}
+  .verdict:last-child{margin-bottom:0}
+  .v-pass{background:rgba(108,174,115,.10);border:1px solid rgba(108,174,115,.3)}
+  .v-fail{background:rgba(227,98,60,.10);border:1px solid rgba(227,98,60,.35)}
+  .v-caution{background:rgba(240,168,56,.09);border:1px solid rgba(240,168,56,.32)}
+  .v-ask,.v-info{background:rgba(70,164,189,.08);border:1px solid rgba(70,164,189,.28)}
+  .v-blocked{background:rgba(227,98,60,.14);border:1px solid rgba(227,98,60,.45)}
+  .ic{font-family:var(--mono);font-weight:600;font-size:10.5px;padding:3px 7px;border-radius:5px;white-space:nowrap;margin-top:1px;background:var(--panel3)}
+  .q{font-size:13.5px;padding:6px 0 6px 16px;position:relative;border-bottom:1px solid var(--line)}
+  .q:last-child{border-bottom:0}
+  .q::before{content:"?";position:absolute;left:0;color:var(--signal);font-family:var(--mono);font-weight:600}
+  .bom{display:grid;grid-template-columns:170px 1fr;gap:4px 14px;font-size:13px}
+  .bom .role{color:var(--mute)} .bom .part{font-family:var(--mono)}
+  .paper{background:var(--paper);color:var(--ink);border-radius:10px;padding:18px 20px}
+  .paper .tag{display:inline-block;background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:3px 9px;border-radius:4px;margin-bottom:11px}
+  .paper .bd{font-size:14px;white-space:pre-wrap}
+  .err{background:rgba(227,98,60,.1);border:1px solid rgba(227,98,60,.4);border-radius:8px;padding:12px 14px;font-size:13.5px}
+  .note{font-size:12.5px;color:var(--mute);margin-top:7px}
+  footer{margin-top:26px;border-top:1px solid var(--line);padding-top:14px;color:var(--mute);font-size:12px;font-family:var(--mono)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kick">Allied Instrumentation</p>
+    <h1>AXG Sales Assistant</h1>
+    <p class="sub">Paste a customer inquiry and get a validated draft quote. The model only reads and phrases — every model code, dimension, and verdict comes from the deterministic engine. Every output is a draft for human review.</p>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--signal)"></i>From the inquiry</span>
+      <span><i class="dot" style="background:var(--mute)"></i>Allied default</span>
+      <span><i class="dot" style="background:var(--rule)"></i>Forced by rule</span>
+      <span><i class="dot" style="background:var(--flag)"></i>Provisional / flag</span>
+    </div>
+  </header>
+
+  <div class="banner" id="banner"></div>
+
+  <div class="tabs">
+    <button class="tab on" id="tab-email" onclick="showTab('email')">Paste an email</button>
+    <button class="tab" id="tab-fields" onclick="showTab('fields')">Build by fields</button>
+  </div>
+
+  <div class="card" id="pane-email">
+    <label for="email">Customer inquiry</label>
+    <textarea id="email" placeholder="e.g. Need a 2-inch wafer mag, explosion proof, HART output, for a chemical line. 316 wetted parts fine."></textarea>
+    <div class="row-controls">
+      <button class="run" id="quoteBtn" onclick="runEmail()">Build the quote</button>
+      <span id="status"></span>
+    </div>
+    <div class="ex">Try:
+      <a onclick="ex('Replacing a Rosemount 8705 on a 10″ flanged city-water line, general purpose, 4-20mA HART.')">mag retrofit</a>·
+      <a onclick="ex('Need a vortex on steam, 5000 lb/hr, 150 psig saturated steam, 3 inch flanged.')">steam vortex</a>·
+      <a onclick="ex('Pressure transmitter, 0-100 psi, explosion proof, 1/2 NPT female.')">pressure</a>·
+      <a onclick="ex('6 inch WKM butterfly valve, actuated, on/off.')">valve</a>
+    </div>
+  </div>
+
+  <div class="card" id="pane-fields" style="display:none">
+    <div class="mgrid"><div class="mfield"><label>Instrument</label>
+      <select id="instrument" onchange="renderFields()">
+        <option value="axg">AXG — magnetic flowmeter</option>
+        <option value="vy">VY — vortex flowmeter</option>
+        <option value="eja">EJA530E — pressure transmitter</option>
+        <option value="valve">Quarter-turn valve</option>
+      </select></div></div>
+    <div class="mgrid" id="fieldGrid" style="margin-top:10px"></div>
+    <div class="row-controls"><button class="run" onclick="runFields()">Build from fields</button><span id="status2"></span></div>
+    <div class="note">Runs the validated engine directly — no API key needed. (No drafted reply in this mode; that needs the language layer.)</div>
+  </div>
+
+  <div class="out" id="out"></div>
+  <footer>Draft for review — confirm before sending or ordering. Codes &amp; dimensions come from verified data, never generated.</footer>
+</div>
+
+<script>
+const FIELDS = {
+  axg: [
+    {k:'sizeInch',t:'number',l:'Line size (in)'},
+    {k:'connectionType',t:'select',l:'Connection',o:['','wafer','flange']},
+    {k:'connectionRating',t:'select',l:'Rating',o:['','150','300']},
+    {k:'area',t:'select',l:'Area',o:['','general_purpose','hazardous']},
+    {k:'fluid',t:'text',l:'Fluid'},
+    {k:'temperatureMaxC',t:'number',l:'Max temp (°C)'},
+    {k:'conductivityUScm',t:'number',l:'Conductivity (µS/cm)'},
+    {k:'flowGpm',t:'number',l:'Flow (gpm)'},
+    {k:'electrodeMaterial',t:'text',l:'Electrode'},
+    {k:'accuracy',t:'select',l:'Accuracy',o:['','standard','high']},
+    {k:'abrasiveOrSlurry',t:'check',l:'Abrasive / slurry'},
+    {k:'competitorBrand',t:'text',l:'Replacing (brand)'},
+    {k:'outputType',t:'text',l:'Output'},
+  ],
+  vy: [
+    {k:'sizeInch',t:'number',l:'Line size (in)'},
+    {k:'connectionType',t:'select',l:'Connection',o:['','wafer','flange']},
+    {k:'connectionRating',t:'select',l:'Rating',o:['','150','300','600']},
+    {k:'area',t:'select',l:'Area',o:['','general_purpose','hazardous']},
+    {k:'fluid',t:'text',l:'Fluid (e.g. steam)'},
+    {k:'temperatureMaxC',t:'number',l:'Max temp (°C)'},
+    {k:'flowGpm',t:'number',l:'Liquid flow (gpm)'},
+    {k:'steamPressurePsig',t:'number',l:'Steam pressure (psig)'},
+    {k:'steamMassLbHr',t:'number',l:'Steam flow (lb/hr)'},
+    {k:'tempCompensated',t:'select',l:'Temp comp',o:['','yes','no']},
+    {k:'mount',t:'select',l:'Mount',o:['','integral','remote']},
+    {k:'cableLengthM',t:'number',l:'Cable length (m, remote)'},
+  ],
+  eja: [
+    {k:'requiredSpanPsi',t:'number',l:'Required span (psi)'},
+    {k:'area',t:'select',l:'Area',o:['','general_purpose','hazardous']},
+    {k:'fluid',t:'text',l:'Fluid'},
+    {k:'temperatureMaxC',t:'number',l:'Max temp (°C)'},
+    {k:'pressureConnection',t:'select',l:'Connection',o:['','female','male']},
+    {k:'bracket',t:'select',l:'Bracket',o:['','yes','no']},
+    {k:'indicator',t:'select',l:'Indicator',o:['','yes','no']},
+  ],
+  valve: [
+    {k:'family',t:'select',l:'Family',o:['','WKM','FLOW-TEK']},
+    {k:'sizeInch',t:'number',l:'Size (in)'},
+    {k:'bodyStyle',t:'select',l:'Body (WKM)',o:['','lugged','wafer']},
+    {k:'package',t:'select',l:'Package',o:['','digital','control']},
+    {k:'airPressure',t:'select',l:'Air',o:['','80psi','60psi']},
+    {k:'location',t:'select',l:'Location',o:['','south_digital','loudon_tn','decatur_il']},
+    {k:'severeService',t:'select',l:'Severe service',o:['','standard','dry_gas_or_slurry','low_temperature','emergency_shutdown']},
+  ],
+};
+
+const $ = (id)=>document.getElementById(id);
+const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;};
+function showTab(t){
+  $('tab-email').classList.toggle('on',t==='email');$('tab-fields').classList.toggle('on',t==='fields');
+  $('pane-email').style.display=t==='email'?'block':'none';$('pane-fields').style.display=t==='fields'?'block':'none';
+}
+function ex(t){ $('email').value=t; }
+
+function renderFields(){
+  const inst=$('instrument').value; const grid=$('fieldGrid'); grid.innerHTML='';
+  for(const f of FIELDS[inst]){
+    const w=el('div','mfield');
+    if(f.t==='check'){ w.innerHTML=`<label>${f.l}</label><input type="checkbox" id="f_${f.k}">`; }
+    else if(f.t==='select'){ w.innerHTML=`<label>${f.l}</label><select id="f_${f.k}">${f.o.map(o=>`<option value="${o}">${o||'—'}</option>`).join('')}</select>`; }
+    else { w.innerHTML=`<label>${f.l}</label><input type="${f.t}" id="f_${f.k}" ${f.t==='number'?'step="any"':''}>`; }
+    grid.appendChild(w);
+  }
+}
+
+function collectFields(){
+  const inst=$('instrument').value; const inq={};
+  for(const f of FIELDS[inst]){
+    const e=$('f_'+f.k); if(!e) continue;
+    if(f.t==='check'){ if(e.checked) inq[f.k]=true; }
+    else { const v=e.value.trim(); if(v==='') continue; inq[f.k]= f.t==='number'? Number(v) : v; }
+  }
+  return {instrument:inst, inquiry:inq};
+}
+
+async function runEmail(){
+  const email=$('email').value.trim();
+  if(!email){ $('status').textContent='Enter an inquiry first.'; return; }
+  $('quoteBtn').disabled=true; $('status').innerHTML='<span class="spin"></span>Reading, validating, drafting…'; $('out').innerHTML='';
+  try{
+    const r=await fetch('/api/quote',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email})});
+    const data=await r.json();
+    if(!r.ok){ showError(data.error||('HTTP '+r.status)); return; }
+    renderRouted(data);
+  }catch(e){ showError(String(e)); }
+  finally{ $('quoteBtn').disabled=false; $('status').textContent=''; }
+}
+
+async function runFields(){
+  $('status2').innerHTML='<span class="spin"></span>Running engine…'; $('out').innerHTML='';
+  try{
+    const r=await fetch('/api/configure',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(collectFields())});
+    const data=await r.json();
+    if(!r.ok){ showError(data.error||('HTTP '+r.status)); return; }
+    renderResult(data.result);
+  }catch(e){ showError(String(e)); }
+  finally{ $('status2').textContent=''; }
+}
+
+function showError(msg){ $('out').innerHTML=''; $('out').appendChild(el('div','err',msg)); }
+
+function renderRouted(d){
+  const out=$('out'); out.innerHTML='';
+  const t=el('div','sec'); t.appendChild(el('h3','','Routing (the language layer)'));
+  t.appendChild(el('div','chip',`instrument <b>${d.instrument}</b>`));
+  t.appendChild(el('div','note',d.triageReason||''));
+  out.appendChild(t);
+  if(d.inquiry){
+    const s=el('div','sec'); s.appendChild(el('h3','','Extracted spec'));
+    const ch=el('div','chips');
+    for(const [k,v] of Object.entries(d.inquiry)) ch.appendChild(el('div','chip',`${k} <b>${v}</b>`));
+    s.appendChild(ch); out.appendChild(s);
+  }
+  if(d.result) appendResultSections(out,d.result);
+  if(d.draft){
+    const p=el('div','paper'); p.appendChild(el('span','tag','Drafted reply · for review'));
+    p.appendChild(el('div','bd',d.draft)); out.appendChild(p);
+  }
+}
+
+function renderResult(result){ const out=$('out'); out.innerHTML=''; appendResultSections(out,result); }
+
+const SRC=(s)=>`src-${s}`;
+function appendResultSections(out,r){
+  if(r.fatal){ out.appendChild(el('div','err','Cannot build a quote: '+r.fatal)); return; }
+  const head=el('div','sec'); head.appendChild(el('h3','',r.instrument||'Result'));
+  // model code
+  if(r.modelCode){
+    head.appendChild(el('div','pn', escapeHtml(r.modelCode.partNumber)+(r.modelCode.provisional?'<span class="prov">PROVISIONAL</span>':'')));
+    const tbl=el('table','pos');
+    for(const p of r.modelCode.positions){
+      const tr=el('tr');
+      tr.appendChild(el('td','n',String(p.order)));
+      tr.appendChild(el('td','nm',escapeHtml(p.name)));
+      tr.appendChild(el('td','cd '+SRC(p.source),escapeHtml(p.code)));
+      tr.appendChild(el('td','de',escapeHtml(p.description||'')));
+      tbl.appendChild(tr);
+    }
+    head.appendChild(tbl);
+  }
+  // assembly
+  if(r.assemblyNumber || r.assembly){
+    if(r.assemblyNumber) head.appendChild(el('div','pn','Assembly: '+escapeHtml(r.assemblyNumber)));
+    if(r.assembly){
+      const b=el('div','bom');
+      for(const a of r.assembly){
+        b.appendChild(el('div','role',escapeHtml(a.title||a.role)));
+        b.appendChild(el('div','part',escapeHtml(a.partNumber)+(a.provisional?' (provisional)':'')+(a.note?` — ${escapeHtml(a.note)}`:'')));
+      }
+      head.appendChild(b);
+    }
+  }
+  out.appendChild(head);
+  // computed
+  if(r.computed){
+    const s=el('div','sec'); s.appendChild(el('h3','','Computed sizing'));
+    s.appendChild(verdict(r.computed.status, r.computed.id, r.computed.detail));
+    if(r.computed.metrics) s.appendChild(el('div','note',JSON.stringify(r.computed.metrics)));
+    out.appendChild(s);
+  }
+  // gates
+  if(r.gates && r.gates.length){
+    const s=el('div','sec'); s.appendChild(el('h3','','Application gates'));
+    for(const g of r.gates) s.appendChild(verdict(g.status,g.id,g.detail));
+    out.appendChild(s);
+  }
+  // flags
+  if(r.flags && r.flags.length){
+    const s=el('div','sec'); s.appendChild(el('h3','','Flags'));
+    for(const f of r.flags){
+      const v=verdict(f.severity==='blocked'?'blocked':f.severity==='warn'?'caution':'info', f.kind, f.detail);
+      if(f.alternatives && f.alternatives.length) v.appendChild(el('div','note','alternatives: '+f.alternatives.map(escapeHtml).join(', ')));
+      s.appendChild(v);
+    }
+    out.appendChild(s);
+  }
+  // questions
+  if(r.questions && r.questions.length){
+    const s=el('div','sec'); s.appendChild(el('h3','','Open questions for the reply'));
+    for(const q of r.questions) s.appendChild(el('div','q',escapeHtml(q)));
+    out.appendChild(s);
+  }
+}
+
+function verdict(status,label,detail){
+  const cls={pass:'v-pass',fail:'v-fail',caution:'v-caution',ask:'v-ask',info:'v-info',blocked:'v-blocked',unavailable:'v-ask'}[status]||'v-info';
+  const v=el('div','verdict '+cls);
+  v.appendChild(el('span','ic',escapeHtml(String(label).toUpperCase())));
+  v.appendChild(el('div',null,escapeHtml(detail||'')));
+  return v;
+}
+function escapeHtml(s){ return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+
+// init
+renderFields();
+fetch('/api/health').then(r=>r.json()).then(h=>{
+  if(!h.hasKey){
+    const b=$('banner'); b.style.display='block';
+    b.innerHTML='<b>Engine ready.</b> Email parsing needs <code>ANTHROPIC_API_KEY</code> on the server — until then use <b>Build by fields</b> to run the validated engine, or restart the server with a key for the full paste-an-email flow.';
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,537 @@
+{
+  "_meta": {
+    "purpose": "Truth layer for quarter-turn valve assemblies. The valve sizing engine references THIS file for all torque data, actuator outputs, severe-service factors, and stock pairings \u2014 it never holds valve logic in code. Same anti-hallucination discipline as axg_model_code.json / vy_model_code.json.",
+    "source": "Allied stock list (South Digital, 80 psi air) + actuator torque charts + valve torque tables, provided 2026-06-22.",
+    "status": "FIELD-PROVEN BUILDS are the primary authority (verified at 2 locations: South Digital + Loudon TN; actuator sizing identical at both). Torque chart is a SECONDARY backstop for severe-service / off-list sizing only.",
+    "air_pressure_basis": "80 psi instrument air (actuator outputs are at 80 psi).",
+    "standard_shutoff_basis_psig": 100,
+    "authority_model": "Field-proven stock builds = primary truth (these run daily without field issues). Torque math = secondary, used ONLY for severe service (slurry/ESD/low-temp) or sizes/families not in the stock builds.",
+    "package_types": "TWO package types: 'digital' (on/off, solenoid-stroked) and 'control' (modulating, positioner-controlled). Same valve+linkage; control element and (for FLOW-TEK) actuator differ. WKM actuator is the SAME for both types; FLOW-TEK control actuators are UPSIZED vs digital (modulating needs more torque).",
+    "air_pressure_dimension": "Air pressure (80 vs 60 psi) is a REQUIRED sizing dimension. Lower air pressure UPSIZES the actuator (same actuator makes less torque at lower air, so a bigger one is needed for the same valve). Actuator suffix encodes it: SR80 vs SR60. 80psi=South Digital/Loudon, 60psi=Decatur IL.",
+    "matrix_completeness": "COMPLETE for standard service: 2 families x 2 package types (digital/control) x 2 air pressures (80/60) x locations (South Digital, Loudon, Decatur). All actuators field-proven. Control element positioner varies by location (EP5N / D3XNU)."
+  },
+  "assembly_skeleton": {
+    "_note": "A quarter-turn valve package is a multi-component ASSEMBLY (Section 15 result shape), not a single code. Components:",
+    "components": [
+      {
+        "role": "valve",
+        "varies_by": "size + family"
+      },
+      {
+        "role": "lockable_linkage_kit",
+        "varies_by": "size + family",
+        "pattern": "LKO-[size]-[family]-F[iso]"
+      },
+      {
+        "role": "actuator",
+        "varies_by": "computed from valve torque + severe service",
+        "pattern": "XL[torque]SR80 (Hytork, spring-return, 80psi)"
+      },
+      {
+        "role": "mounting_kit",
+        "varies_by": "size"
+      },
+      {
+        "role": "limit_switch",
+        "constant": true
+      },
+      {
+        "role": "solenoid",
+        "constant": true
+      },
+      {
+        "role": "solenoid_cordset",
+        "constant": true
+      },
+      {
+        "role": "rolled_up_assembly_number",
+        "status": "pattern PENDING \u2014 see pending_confirmations"
+      }
+    ]
+  },
+  "constant_trim": {
+    "_note": "Identical on EVERY standard assembly \u2014 house-standard, like AXG override-only defaults.",
+    "limit_switch": "TVF-DS2GNPM000008938 / REC",
+    "solenoid": "X551 120V",
+    "solenoid_cordset": "P-VAS22-22-A162-0.5M-RSG 5.11T"
+  },
+  "mounting_kit": {
+    "_note": "Switches at size.",
+    "small_to_8in": "AV-TA01",
+    "10in_and_up": "VA21724-CTI"
+  },
+  "m15_valve_torque_raw_in_lb": {
+    "_note": "M15 valve break torque, RAW \u2014 'No safety factor applied'. A base safety factor MUST be applied before sizing (factor PENDING). Then severe-service multipliers stack on top.",
+    "0.5": 70,
+    "0.75": 91,
+    "1.0": 139,
+    "1.5": 306,
+    "2.0": 354,
+    "3.0": 758,
+    "4.0": 1202,
+    "6.0": 2339,
+    "8.0": 3906
+  },
+  "actuator_output_in_lb": {
+    "_note": "Governing minimum torque output ('Min.' column) at 80 psi air. Pick smallest actuator whose output >= required. Includes ISO mounting pattern and star (stem) size.",
+    "Hytork_XL": {
+      "XL131": {
+        "out": 291,
+        "iso": "F07",
+        "star": 0.67
+      },
+      "XL186": {
+        "out": 394,
+        "iso": "F07",
+        "star": 0.67
+      },
+      "XL221": {
+        "out": 545,
+        "iso": "F07",
+        "star": 0.67
+      },
+      "XL281": {
+        "out": 625,
+        "iso": "F07",
+        "star": 0.67
+      },
+      "XL426": {
+        "out": 903,
+        "iso": "F10",
+        "star": 0.87
+      },
+      "XL681": {
+        "out": 1508,
+        "iso": "F10",
+        "star": 0.87
+      },
+      "XL1127": {
+        "out": 2623,
+        "iso": "F12",
+        "star": 1.07
+      },
+      "XL1372": {
+        "out": 3161,
+        "iso": "F12",
+        "star": 1.07
+      },
+      "XL2586": {
+        "out": 5982,
+        "iso": "F16",
+        "star": 1.81
+      },
+      "XL4581": {
+        "out": 10507,
+        "iso": "F16",
+        "star": 1.81
+      }
+    },
+    "_other_brands_available": "Unitork K, Elomatic FS, Rotork GT, Max-Air MT, ABZ output tables also provided \u2014 can be added as alternate-brand selection. Hytork XL is the stock-list brand.",
+    "_missing": "XL26 and XL71 (used on small FLOW-TEK valves in stock list) are NOT in the torque chart \u2014 cannot torque-size those; stock lookup only until their outputs are provided."
+  },
+  "maxair_mast_limits_Nm": {
+    "_note": "Max Allowable Shaft Torque (MAST) by size/class, for 17-4PH(A564 630)-H1100. Upper bound \u2014 actuator output must not exceed valve shaft limit.",
+    "2": {
+      "cl150": 107.1,
+      "cl300": 107.1
+    },
+    "3": {
+      "cl150": 159.8,
+      "cl300": 159.8
+    },
+    "4": {
+      "cl150": 267.6,
+      "cl300": 267.6
+    },
+    "6": {
+      "cl150": 415.4,
+      "cl300": 415.4
+    },
+    "8": {
+      "cl150": 856.4,
+      "cl300": 1278.4
+    },
+    "10": {
+      "cl150": 1278.4,
+      "cl300": 1672.7
+    },
+    "12": {
+      "cl150": 1672.7,
+      "cl300": 4314.6
+    },
+    "14": {
+      "cl150": 2890.4,
+      "cl300": 4314.6
+    },
+    "16": {
+      "cl150": 3555.1,
+      "cl300": 6490.9
+    }
+  },
+  "sizing_logic": {
+    "standard_basis": "Size to 100 psig shutoff (standard packages). Shutoff overridable per-application \u2014 higher differential reads a higher torque row.",
+    "rule": "required_output = valve_torque(size, shutoff) [x base_factor if RAW family] x severe_service_factor. Then pick smallest actuator with output >= required_output. Verify against MAST shaft limit. Show computed pick AND stock pairing; flag if they differ or if stock is under chart.",
+    "WKM": "torque chart is PRE-FACTORED \u2014 apply NO base factor; severe multiplier stacks on top.",
+    "raw_families_M15_FLOWTEK": "apply base_factor FIRST (PENDING), then severe multiplier."
+  },
+  "severe_service_factors": {
+    "_note": "ADDITIONAL multipliers applied ON TOP of the (already-base-factored for WKM) torque chart value. Confirmed 2026-06-22.",
+    "standard": 1.0,
+    "dry_gas_or_slurry": 1.25,
+    "low_temperature": 1.2,
+    "emergency_shutdown": 1.6,
+    "stacking_rule": "PENDING \u2014 when MULTIPLE severe conditions apply (e.g. low-temp + ESD), do factors MULTIPLY (1.20x1.60=1.92) or take the HIGHEST single (1.60)? DO NOT ASSUME \u2014 engine must hold this until confirmed.",
+    "_role": "SECONDARY backstop. Field-proven core builds are for STANDARD service. Use these factors + torque chart ONLY when service is severe (slurry/ESD/low-temp) or the size/family isn't in the field-proven core. Then flag for human confirmation - do not auto-override the stock build."
+  },
+  "pending_confirmations": {
+    "_note": "Reduced \u2014 field-proven builds resolved standard-service sizing for both families. Remaining:",
+    "1_severe_service_handling": "For a STOCKED size on SEVERE service: flag 'standard build is field-proven for standard duty; this is [severe] \u2014 verify actuator' and show torque-chart suggestion. Confirm: flag-only, or auto-upsize? (user leaning flag-only)",
+    "2_severe_stacking_rule": "Multiply vs take-highest for multiple severe conditions \u2014 only needed for severe-service sizing, not standard quotes.",
+    "4_are_stock_builds_standard_service": "Confirm the field-proven builds are proven for STANDARD service (vs some already running severe duty).",
+    "6_flowtek_control_upsizing": "CONFIRMED from data: FLOW-TEK control actuators are upsized vs digital (modulating torque). Captured in actuator_by_package. WKM unchanged between types.",
+    "7_air_pressure_CONFIRMED": "CONFIRMED: air pressure (80 vs 60 psi) upsizes the actuator. Captured as a sizing dimension. 80psi=SD/Loudon, 60psi=Decatur. Decatur 60psi digital now loaded.",
+    "8_matrix_complete": "Decatur 60psi control now loaded - the build matrix is COMPLETE for standard service. Remaining pending items are severe-service handling only (flag-vs-upsize, stacking rule, raw-family base factor) - none block standard-package quoting.",
+    "9_lugged_resolved": "RESOLVED: user confirmed B5123 lugged / B5120 wafer interchangeable across all accessories+actuators. Lugged is field-proven by equivalence; only the valve body code differs. No separate lugged build list needed."
+  },
+  "field_proven_core": {
+    "_note": "Valve + linkage shared across package types. ACTUATOR is package-type-dependent: WKM same for digital & control; FLOW-TEK control actuators UPSIZED vs digital. Verified: South Digital + Loudon (digital), control package (this list).",
+    "solenoid": "ASCO X551 120V",
+    "cordset": "P-VAS22-22-A162 (RSG)",
+    "WKM_B5120": {
+      "3": {
+        "valve": "3\" WKM B5120-02-S02-11/00",
+        "linkage": "LKO-4-B5120-F07",
+        "actuator": "XL131SR80"
+      },
+      "4": {
+        "valve": "4\" WKM B5120-02-S02-11/00",
+        "linkage": "LKO-4-B5120-F07",
+        "actuator": "XL186SR80"
+      },
+      "6": {
+        "valve": "6\" WKM B5120-02-S02-11/00",
+        "linkage": "LKO-6-B5120-F10",
+        "actuator": "XL426SR80"
+      },
+      "8": {
+        "valve": "8\" WKM B5120-02-S02-11/00",
+        "linkage": "LKO-8-B5120-F10",
+        "actuator": "XL681SR80"
+      },
+      "10": {
+        "valve": "10\" WKM B5120-02-S02-11/00",
+        "linkage": "LKO-10-B5120-F12",
+        "actuator": "XL1127SR80"
+      },
+      "12": {
+        "valve": "12\" WKM B5120-02-S02-11/00",
+        "linkage": "LKO-12-B5120-F12",
+        "actuator": "XL1372SR80"
+      }
+    },
+    "FLOW_TEK_F15": {
+      "0.5": {
+        "valve": "1/2\" FLOW-TEK F15-316",
+        "linkage": "LKO-05-F15-F05",
+        "actuator": "XL26SR80"
+      },
+      "0.75": {
+        "valve": "3/4\" FLOW-TEK F15-316",
+        "linkage": "LKO-1-RF15-F07",
+        "actuator": "XL71SR80"
+      },
+      "1": {
+        "valve": "1\" FLOW-TEK RF15-316",
+        "linkage": "LKO-1-RF15-F07",
+        "actuator": "XL71SR80"
+      },
+      "1.5": {
+        "valve": "1-1/2\" FLOW-TEK RF15-316",
+        "linkage": "LKO-1-F15-F07",
+        "actuator": "XL71SR80"
+      },
+      "2": {
+        "valve": "2\" FLOW-TEK RF15-316",
+        "linkage": "LKO-2-RF15-F07",
+        "actuator": "XL131SR80"
+      },
+      "3": {
+        "valve": "3\" FLOW-TEK RF15-316",
+        "linkage": "LKO-3-RF15-F07",
+        "actuator": "XL221SR80"
+      },
+      "4": {
+        "valve": "4\" FLOW-TEK RF15-316",
+        "linkage": "LKO-3-F15-F07",
+        "actuator": "XL281SR80"
+      },
+      "6": {
+        "valve": "6\" FLOW-TEK RF15-316",
+        "linkage": "LKO-4-RF15-F10",
+        "actuator": "XL681SR80"
+      }
+    },
+    "actuator_by_package": {
+      "_note": "Actuator depends on: family x package type x AIR PRESSURE x size. Lower air pressure upsizes. CRITICAL: pick by air pressure - a 60psi site needs a bigger actuator than 80psi for the same valve.",
+      "WKM_B5120": {
+        "digital": {
+          "80psi": {
+            "3": "XL131SR80",
+            "4": "XL186SR80",
+            "6": "XL426SR80",
+            "8": "XL681SR80",
+            "10": "XL1127SR80",
+            "12": "XL1372SR80"
+          },
+          "60psi": {
+            "3": "XL131SR60",
+            "4": "XL221SR60",
+            "6": "XL681SR60",
+            "8": "XL1127SR60",
+            "10": "XL1372SR60",
+            "12": "XL2586SR6BTS"
+          }
+        },
+        "control": {
+          "80psi": {
+            "3": "XL131SR80",
+            "4": "XL186SR80",
+            "6": "XL426SR80",
+            "8": "XL681SR80",
+            "10": "XL1127SR80",
+            "12": "XL1372SR80"
+          },
+          "60psi": {
+            "3": "XL131SR60",
+            "4": "XL221SR60",
+            "6": "XL681SR60",
+            "8": "XL1127SR60",
+            "10": "XL1372SR60",
+            "12": "XL2586SR6BTS"
+          }
+        }
+      },
+      "FLOW_TEK_F15": {
+        "digital": {
+          "80psi": {
+            "0.5": "XL26SR80",
+            "0.75": "XL71SR80",
+            "1": "XL71SR80",
+            "1.5": "XL71SR80",
+            "2": "XL131SR80",
+            "3": "XL221SR80",
+            "4": "XL281SR80",
+            "6": "XL681SR80"
+          },
+          "60psi": {
+            "0.5": "XL26SR60",
+            "0.75": "XL71SR60",
+            "1": "XL71SR60",
+            "1.5": "XL131SR60",
+            "2": "XL186SR60",
+            "3": "XL281SR60",
+            "4": "XL426SR60",
+            "6": "XL1127SR60"
+          }
+        },
+        "control": {
+          "80psi": {
+            "0.5": "XL131SR80",
+            "0.75": "XL131SR80",
+            "1": "XL131SR80",
+            "1.5": "XL131SR80",
+            "2": "XL131SR80",
+            "3": "XL281SR80",
+            "4": "XL426SR80",
+            "6": "XL681SR80",
+            "8": "XL1372SR80"
+          },
+          "60psi": {
+            "0.5": "XL131SR60",
+            "0.75": "XL131SR60",
+            "1": "XL131SR60",
+            "1.5": "XL131SR60",
+            "2": "XL186SR60",
+            "3": "XL426SR60",
+            "4": "XL426SR60",
+            "6": "XL1127SR60"
+          }
+        }
+      }
+    },
+    "flowtek_control_note": "FLOW-TEK control valves use V-PORT trim (modulating). Control adds an 8\" size (XL1372) not in the digital list. Linkage for control 1/2\": LKO-05-F15-F07 (vs digital LKO-05-F15-F05).",
+    "air_pressure_special_cases": {
+      "_note": "60 psi pushes some builds into heavier hardware:",
+      "WKM_12in_60psi": "Actuator XL2586SR6BTS (special SR6BTS suffix, not plain SR60) with linkage LKO-12-B5120-F16BS (BS = heavier). The jump from XL1372(80psi) to XL2586(60psi) is two sizes.",
+      "WKM_8in_60psi_linkage": "8\" 60psi shows linkage LKO-10-B5120-F12 (upsized linkage vs 80psi LKO-8-B5120-F10) - heavier actuator needs the bigger linkage/mount.",
+      "FLOWTEK_6in_60psi": "Mounting VA21754-CTI (note: possibly a typo for VA21724-CTI in source) - large mount for the upsized XL1127."
+    },
+    "_upsizing_composition": "Two independent upsizing effects STACK: (1) FLOW-TEK control vs digital, (2) lower air pressure (60 vs 80). A small FLOW-TEK control valve at 60psi gets both bumps. WKM actuator is unaffected by package type at either air pressure (air pressure governs WKM)."
+  },
+  "trim_packages": {
+    "_note": "Location-specific trim layered on the core. A quote selects a package -> sets mounting kit, limit switch, and assembly-number suffix. Adding a location = adding one package here, not new builds.",
+    "south_digital": {
+      "limit_switch": "TVF-DS2GNPM000008938 / REC",
+      "mounting_kit": {
+        "to_8in": "AV-TA01",
+        "10in_up": "VA21724-CTI"
+      },
+      "assembly_suffix_style": "...LOSRTVFDXTK (TVFD encodes the TVF limit switch)"
+    },
+    "loudon_tn": {
+      "limit_switch": "NXL2100 / REC",
+      "mounting_kit": {
+        "to_8in": "HY-STOOL-SS",
+        "10in_up": "LARGE HY-STOOL"
+      },
+      "assembly_suffix_style": "...LOSRNXLX551TK / ...LOSRNXLXTK (NXL encodes the NXL2100 limit switch)"
+    },
+    "_control_note": "Control packages in this list use HY-STOOL-SS mounting (to 8\") / LARGE HY-STOOL-SS (10-12\"), limit handled via positioner feedback. Mounting echoes Loudon-style HY-STOOL.",
+    "decatur_il": {
+      "limit_switch": "TVF-DS2GNPM000008938 / REC",
+      "mounting_kit": {
+        "to_8in": "AV-TA01",
+        "10in_up": "VA21724-CTI"
+      },
+      "air_pressure": "60psi",
+      "assembly_suffix_style": "...LOS6TVFDXTK (S6 encodes 60psi air; TVFD the TVF switch)",
+      "_note": "Decatur uses South-Digital-style trim (TVF switch, AV-TA01 mount) but runs 60psi air -> upsized actuators. Trim and air pressure are independent dimensions."
+    }
+  },
+  "verified_assembly_numbers": {
+    "_note": "Exact rolled-up assembly numbers from the stock lists \u2014 use these directly, do not generate. Some sizes blank in source.",
+    "south_digital_WKM": {
+      "3": "3-B5120LOSRTVFDXTK",
+      "4": "4-B5120LOSRTVDXTK",
+      "6": "6-B5120LOSRTVFDXTK",
+      "8": "8-B5120LOSRTVDXTK",
+      "10": "10-B5120LOSRTVFDXTK",
+      "12": "12-B5120LOSRTVFDXTK"
+    },
+    "loudon_WKM": {
+      "3": "3-B5120LOSRNXLX551TK",
+      "4": "4-B5120LOSRNXLX551TK",
+      "6": "6-B5120LOSRNXLXTK",
+      "8": "8-B5120LOSRNXLX551TK",
+      "10": "10-B5120LOSRNXLXTK",
+      "12": "12-B5120SRNXLXTK"
+    },
+    "control_WKM": {
+      "3": "3-B5120LOSREPT",
+      "4": "4-B5120LOEP5TK",
+      "6": "6-B5120LOSREPRC",
+      "8": "8-B5120SREPTK",
+      "10": "10-B5120LOSREP5R",
+      "12": "12-B5120LOSREPR",
+      "_note": "EP/EPT/EPR suffixes encode the EP5N positioner (vs TVFD/NXL for digital limit switches). Several inconsistent; use directly, don't generate."
+    },
+    "decatur_60psi_WKM": {
+      "3": "3-B5120LOS6TVFDTK",
+      "4": "4-B5120LOS6TVFDXTK",
+      "6": "6-B5120LOS6TVFDXTK",
+      "8": "8-B5120LOS6TVFDXTK",
+      "10": "10-B5120LOS6TVFDXTK",
+      "12": "12-B5120LOS6TVFDXTK",
+      "_note": "'S6' in the suffix encodes 60psi air (vs 'SR'/'LOSR' at 80psi). TVFD = TVF limit switch (Decatur uses South-Digital-style TVF trim + AV-TA01 mounting)."
+    },
+    "decatur_60psi_control_WKM": {
+      "3": "3-B5120LOS6D3TK",
+      "4": "4-B5120LOS6D3TK",
+      "6": "6-B5120LOS6D3TK",
+      "8": "8-B5120S6D3TK",
+      "10": "10-B5120LOS6D3XTKR",
+      "12": "12-B5120LOSR6D3TK",
+      "_note": "'S6' encodes 60psi, 'D3' encodes the D3XNU positioner (vs EP for EP5N, TVFD/NXL for digital limit switches). Inconsistent; use directly."
+    },
+    "south_digital_FLOWTEK": {
+      "0.5": "05-F15LOSRTVFDXTK",
+      "0.75": "07-F15LOSRTVDXTK",
+      "1": "1-RF15LOSRTVFDXTK",
+      "1.5": "15-RF15LOSRTVFDXTK",
+      "2": "2-RF15LOSRTVFDXTK",
+      "3": "3-RF15LOSRTVFDXTK",
+      "4": "4-RF15LOSRTVFDXTK",
+      "6": "6-RF15LOSRTVFDXTK"
+    },
+    "decatur_60psi_FLOWTEK": {
+      "0.5": "05-F15LOS6TVFDXTK",
+      "0.75": "07-F15LOS6TVDXTK",
+      "1": "1-RF15LOSR6TVFDXTK",
+      "1.5": "15-RF15LOS6TVFDXTK",
+      "2": "2-RF15LOSR6TVFDXTK",
+      "3": "3-RF15LOS6TVFDXTK",
+      "4": "4-RF15LOSR6TVFDXTK",
+      "6": "6-RF15LOSR6TVFDXTK"
+    },
+    "_flowtek_gaps": "Loudon FLOW-TEK and all CONTROL FLOW-TEK assembly numbers were blank in the provided lists - those show to-be-assigned until captured."
+  },
+  "control_element_by_package": {
+    "_note": "The control element defines the package type. Digital=solenoid+cordset (strokes open/closed). Control=positioner+tubing (modulates).",
+    "digital": {
+      "solenoid": "ASCO X551 120V",
+      "cordset": "P-VAS22-22-A162 (RSG)"
+    },
+    "control": {
+      "positioner": "SEE _positioner_by_location (varies: EP5N default, D3XNU at Decatur)",
+      "fitting_tubing": "316SS TUBING / FITTING",
+      "accessories": {
+        "cordset": "P-RSV RKV 40-949-2M",
+        "conduit_adapter": "CA1-RKFV 40/S3017",
+        "flying_leads": "P-RKV-40-949-2M"
+      },
+      "_positioner_by_location": {
+        "_note": "The control positioner model varies by location. EP5N at South Digital / Loudon / etc; D3XNU at Decatur.",
+        "default": "PMV EP5N / TURCK 4 PIN REC",
+        "decatur_il": "PMV D3XNU-D23VA-Z4XX / 4 PIN REC"
+      }
+    }
+  },
+  "body_style": {
+    "_note": "Valve body style is a real physical dimension (like flanged vs wafer mag meters). Wafer = sandwiched between two flanges. Lugged = tapped/threaded lugs on each side, bolts to each flange independently, supports dead-end service.",
+    "FLOW_TEK_F15": {
+      "style": "flanged ball valve",
+      "note": "F15/RF15-316 are flanged ball valves - one style.",
+      "port_by_package": {
+        "digital": "standard port (full bore ball)",
+        "control": "V-PORT (V-notch ball, modulating characteristic) \u2014 REQUIRED for control. A standard on/off ball cannot modulate. Confirmed: control lists show FLOW-TEK valves as (V PORT); digital lists do not."
+      }
+    },
+    "WKM_butterfly": {
+      "wafer": {
+        "valve_code": "WKM B5120",
+        "status": "FIELD-PROVEN - all loaded WKM builds are B5120 wafer."
+      },
+      "lugged": {
+        "valve_code": "WKM B5123",
+        "status": "FIELD-PROVEN BY EQUIVALENCE (user-confirmed 2026-06-22): B5123 lugged and B5120 wafer are interchangeable across ALL accessories and actuators - only the valve body code differs (B5120<->B5123). Every verified wafer build is therefore also valid as a lugged build with the body swapped. Linkage, actuator, mounting, trim, control element all identical."
+      },
+      "_interchangeability": "CONFIRMED: WKM B5120 (wafer) and B5123 (lugged) share all accessories and actuators. Body style changes ONLY the valve body code; the rest of the assembly is identical for a given size/package/air-pressure/location. So both body styles draw on the same field-proven core.",
+      "_control_note": "Butterfly is inherently throttling-capable; WKM control uses the same B5120/B5123 body as digital, just adds the positioner. No separate control body (unlike FLOW-TEK ball, which needs V-port)."
+    },
+    "default_rule": "Default to LUGGED (B5123) if body style not stated, but FLAG it (so the user can switch to wafer B5120). Both styles are field-proven by equivalence - same assembly, only the valve body code differs. No caveat needed beyond the standard flag.",
+    "engine_rule": "WKM assembly: pull the field-proven build for size/package/air/location, then set valve body = 'WKM B5123' (lugged, default) or 'WKM B5120' (wafer, if stated). All other components (linkage, actuator, mounting, trim, control element) come from the verified build unchanged."
+  },
+  "quote_defaults": {
+    "_note": "Defaults for unstated dimensions in a loose/partial valve request. Each is assume-and-flag, like AXG -C / EJA /FU1 fail-safe defaults.",
+    "air_pressure": {
+      "default": "80psi",
+      "rule": "Assume 80 psi if not stated, but FLAG. 60psi = Decatur."
+    },
+    "package_type": {
+      "default": "digital",
+      "rule": "Assume digital (on/off) unless CONTROL is explicitly stated."
+    },
+    "body_style": {
+      "default": "lugged (B5123 for WKM)",
+      "rule": "Assume lugged if not stated, but FLAG (see body_style caveat - lugged not yet field-proven on file)."
+    },
+    "actuator_brand": {
+      "default": "Hytork XL",
+      "rule": "All field-proven builds use Hytork XL. Default Hytork."
+    },
+    "lockout": {
+      "default": "yes",
+      "rule": "Lockable linkage kit (LKO-*) is in every field-proven build. Default included."
+    }
+  }
+}

@@ -1,0 +1,382 @@
+{
+  "_meta": {
+    "instrument": "VY Series Vortex Flowmeter",
+    "family": "VY (successor to YEWFLO)",
+    "source_datasheet": "GS 01F07A00-01EN (9th Edition, Mar 2026) - Model & Suffix Codes pages 45-52, read from clean images 2026-06-22",
+    "status": "CONFIGURATOR FOUNDATION - positions and codes VERIFIED from datasheet images. Allied defaults are HYPOTHESES pending user confirmation. Computed low-flow sizing is PENDING flow-range/K-factor data (not in these pages).",
+    "measures": "Liquid, gas, saturated steam, superheated steam via Karman vortex shedding. Avoid multiphase, sticky, or corrosive fluids.",
+    "accuracy": "+/-0.75% of READING (liquid); +/-1% of reading (gas, steam). NOTE: 'of reading' not 'of span' - this is the tell that a vortex has a low-flow floor and needs a computed sizing check (see _computed_sizing_pending).",
+    "_architecture_notes": [
+      "NEW CAPABILITY vs AXG/EJA: computed low-flow / Reynolds floor check. A vortex stops shedding below a minimum flow velocity and produces nothing. The engine must CALCULATE whether the customer's flow clears the floor and return that as a COMPUTED result (pass/fail/marginal), not a code position. This is the Section-15 result-contract seam: the first instrument whose result is more than a suffix code. Build the VY result to carry this computed verdict explicitly - it proves the seam that later lets valves (Cv math) plug in.",
+      "MULTI-COMPONENT vs single-unit: a REMOTE vortex installation is THREE orderable items - remote sensor (VY[size] with display code N) + remote transmitter (VY4A) + signal cable (VY1C). An INTEGRAL installation is one item (VY[size] with display code 1). This is another assembly case, like the temperature transmitter and the diaphragm-seal+EJA. See companion_models.",
+      "SHARED with AXG/EJA: position-by-position suffix code assembly, wetted-parts compatibility gate (footnote *4 lists the same aggressive fluids - HCl, H2SO4, H2S, NaOCl, hot steam), cross-position restriction rules.",
+      "PART-NUMBER HYPHENATION: the datasheet header shows hyphens grouping the positions (VY[size]-[cert][body][shedder][material]-[conn][housing][cable][comm][display]00/[options]) but the exact separator placement is small in the header image. Treat the concatenation/hyphen placement as NEEDS-VERIFICATION against a real VY order code before quoting - capture positions in order; do not assert exact hyphen positions yet."
+    ]
+  },
+  "size_map": {
+    "_note": "Size code = nominal bore. Single/dual availability noted. VY250/300/400 are single-sensor only.",
+    "VY015": {
+      "mm": 15,
+      "inch": 0.5,
+      "single": true,
+      "dual": true
+    },
+    "VY025": {
+      "mm": 25,
+      "inch": 1,
+      "single": true,
+      "dual": true
+    },
+    "VY040": {
+      "mm": 40,
+      "inch": 1.5,
+      "single": true,
+      "dual": true
+    },
+    "VY050": {
+      "mm": 50,
+      "inch": 2,
+      "single": true,
+      "dual": true
+    },
+    "VY080": {
+      "mm": 80,
+      "inch": 3,
+      "single": true,
+      "dual": true
+    },
+    "VY100": {
+      "mm": 100,
+      "inch": 4,
+      "single": true,
+      "dual": true
+    },
+    "VY150": {
+      "mm": 150,
+      "inch": 6,
+      "single": true,
+      "dual": true
+    },
+    "VY200": {
+      "mm": 200,
+      "inch": 8,
+      "single": true,
+      "dual": true
+    },
+    "VY250": {
+      "mm": 250,
+      "inch": 10,
+      "single": true,
+      "dual": false
+    },
+    "VY300": {
+      "mm": 300,
+      "inch": 12,
+      "single": true,
+      "dual": false
+    },
+    "VY400": {
+      "mm": 400,
+      "inch": 16,
+      "single": true,
+      "dual": false
+    }
+  },
+  "positions": {
+    "1_certification": {
+      "note": "*11 - select per country/region explosive-atmosphere laws. Taiwan/UAE requiring Ex -> select IECEx. -004/-GF2/-GS2 (EAC) require option /VE (*19).",
+      "codes": {
+        "-000": "Non-Ex without CE/CSA marking",
+        "-001": "Non-Ex with CE marking",
+        "-002": "Non-Ex with Canada CSA marking (Dual Seal certification)",
+        "-004": "Non-Ex with EAC Approval marking (*19 requires /VE)",
+        "-SF2": "IECEx Flameproof 'db'",
+        "-SS2": "IECEx Intrinsically safe 'ia'",
+        "-KF2": "ATEX Flameproof 'db'",
+        "-KS2": "ATEX Intrinsically safe 'ia'",
+        "-FF1": "FM Explosionproof approval (Dual Seal certification)",
+        "-FS1": "FM Intrinsically safe approval (Dual Seal certification)",
+        "-CF1": "FMc Explosionproof approval (Dual Seal certification) (Canada)",
+        "-CS1": "FMc Intrinsically safe approval (Dual Seal certification) (Canada)",
+        "-JF5": "Japan Flameproof 'db'",
+        "-NF2": "NEPSI Flameproof 'db' (China)",
+        "-NS2": "NEPSI Intrinsically safe 'ia' (China)",
+        "-PF2": "Korea Flameproof 'db'",
+        "-PS2": "Korea Intrinsically safe 'ia'",
+        "-GF2": "EAC Flameproof 'db' (*19 requires /VE)",
+        "-GS2": "EAC Intrinsically safe 'ia' (*19 requires /VE)",
+        "-UF2": "INMETRO Flameproof 'db' (Brazil)",
+        "-US2": "INMETRO Intrinsically safe 'ia' (Brazil)"
+      }
+    },
+    "2_body_type": {
+      "note": "*1 reduced bore integrates expansion pipe up/downstream. *21 high-pressure reduced bore (-4) CANNOT combine with shedder bar B/C/D/E/H (temp-sensor/high-temp/cryo types).",
+      "codes": {
+        "-0": "General Type (single-sensor)",
+        "-1": "Reduced Bore Type, 1 size reduction (*1)",
+        "-2": "Reduced Bore Type, 2 size reduction (*1)",
+        "-4": "High Pressure Reduced Bore Type, 1 size reduction (*1, *21)",
+        "-6": "Dual-Sensor (Welded) General Type (dual-sensor)"
+      }
+    },
+    "3_shedder_bar": {
+      "note": "Single-sensor codes (A/B/C/D/E/G/H) vs Dual-sensor codes (N/P/Q/R/S/U/V) for the same type. Temp-sensor variants (B/P, D/R, H/V) have built-in Pt1000 (*2); for /LAT low-ambient, process temp must be >= -40C.",
+      "codes": {
+        "A": "General Type (single)",
+        "N": "General Type (dual)",
+        "B": "General Type w/ Temperature Sensor (single, *2)",
+        "P": "General Type w/ Temperature Sensor (dual, *2)",
+        "C": "High Temperature Type (single)",
+        "Q": "High Temperature Type (dual)",
+        "D": "High Temperature Type w/ Temperature Sensor (single, *2)",
+        "R": "High Temperature Type w/ Temperature Sensor (dual, *2)",
+        "E": "Cryogenic Type (single)",
+        "S": "Cryogenic Type (dual)",
+        "G": "Long Neck Type (single)",
+        "U": "Long Neck Type (dual)",
+        "H": "Long Neck Type w/ Temperature Sensor (single, *2)",
+        "V": "Long Neck Type w/ Temperature Sensor (dual, *2)"
+      }
+    },
+    "4_body_shedder_material": {
+      "note": "*3 CF8M ~ JIS SCS14A. *4 WETTED-PARTS COMPATIBILITY GATE: carefully match to fluid; aggressive fluids (HCl, H2SO4, H2S, NaOCl, hot steam >=150C) need engineering review. Single/dual code pairs.",
+      "codes": {
+        "BL": "Std (up to VY300): Body CF8M, Shedder Duplex 1.4517/S31803 (single)",
+        "EN": "Std (up to VY300): Body CF8M, Shedder Duplex 1.4517/S31803 (dual)",
+        "BH": "High-temp/cryo/anti-corrosion: Body CF8M, Shedder Nickel alloy CW-12MW/N10276 (single)",
+        "EJ": "High-temp/cryo/anti-corrosion: Body CF8M, Shedder Nickel alloy CW-12MW/N10276 (dual)",
+        "BB": "YEWFLO-std & high-temp materials: Body CF8M, Shedder CF8M (single)",
+        "EE": "YEWFLO-std & high-temp materials: Body CF8M, Shedder CF8M (dual)",
+        "HH": "Anti-corrosion: Body Nickel alloy CW-12MW, Shedder Nickel alloy CW-12MW/N10276 (single only; *18 pressure rating per CF8M)"
+      }
+    },
+    "5_process_connection": {
+      "note": "*6 standards: ASME B16.5 / EN 1092-1 / JIS B2220. Face: FF=Flat, RF=Raised, SF=Smooth, RJ=Ring Joint. Codes depend on BODY MATERIAL (CF8M prefix B*/E*, CW-12MW prefix H*) and wafer vs flange. *17 some specs merged into higher ratings. *20 JIS cannot combine with TSG /TS1//TS2. Dual-sensor flange uses E-prefix codes where shown.",
+      "wafer_CF8M": {
+        "BAA1": "ASME Class 150 Wafer",
+        "BAA2": "ASME Class 300 Wafer",
+        "BAA4": "ASME Class 600 Wafer",
+        "BAE2": "EN PN16/10 Wafer (*17)",
+        "BAE4": "EN PN40/25 (or /16/10) Wafer (*17)",
+        "BAJ1": "JIS 10K Wafer (*20)",
+        "BAJ2": "JIS 20K (or 20K/10K) Wafer (*17,*20)",
+        "BAJ4": "JIS 40K Wafer (*20)"
+      },
+      "wafer_CW12MW": {
+        "HAA1": "ASME Class 150 Wafer",
+        "HAA2": "ASME Class 300 Wafer",
+        "HAA4": "ASME Class 600 (or 600/300) Wafer (*17)",
+        "HAE2": "EN PN16/10 Wafer (*17)",
+        "HAE4": "EN PN40/25 (or /16/10) Wafer (*17)",
+        "HAJ1": "JIS 10K Wafer (*20)",
+        "HAJ2": "JIS 20K (or 20K/10K) Wafer (*17,*20)",
+        "HAJ4": "JIS 40K Wafer (*20)"
+      },
+      "flange_CF8M": {
+        "BBA1/EBA1": "ASME Class 150 Flange (RF)",
+        "BBA2/EBA2": "ASME Class 300 Flange (RF)",
+        "BBA4/EBA4": "ASME Class 600 Flange (RF)",
+        "BBA5/EBA5": "ASME Class 900 Flange (RF)",
+        "BBA6": "ASME Class 1500 Flange (RF) (*7 body F316)",
+        "BDA1": "ASME Class 150 Flange (RF & SF)",
+        "BDA2": "ASME Class 300 Flange (RF & SF)",
+        "BDA4": "ASME Class 600 Flange (RF & SF)",
+        "BDA5": "ASME Class 900 Flange (RF & SF)",
+        "BCA4": "ASME Class 600 Flange (RJ)",
+        "BCA5": "ASME Class 900 Flange (RJ)",
+        "BCA6": "ASME Class 1500 Flange (RJ) (*7 body F316)",
+        "BBE1/EBE1": "EN PN10 Flange (Type B1)",
+        "BBE2/EBE2": "EN PN16 (or 16/10) Flange (Type B1) (*17)",
+        "BBE3/EBE3": "EN PN25 Flange (Type B1)",
+        "BBE4/EBE4": "EN PN40 (or 40/25, 40/25/16/10) Flange (Type B1) (*17)",
+        "BBE5": "EN PN63 Flange (Type B1)",
+        "BBE6": "EN PN100 Flange (Type B1)",
+        "BFE1": "EN PN10 Flange (Type F)",
+        "BFE2": "EN PN16 (or 16/10) Flange (Type F) (*17)",
+        "BFE3": "EN PN25 Flange (Type F)",
+        "BFE4": "EN PN40 (or 40/25, 40/25/16/10) Flange (Type F) (*17)",
+        "BFE5": "EN PN63 Flange (Type F)",
+        "BGE4": "EN PN40 Flange (Type D)",
+        "BGE5": "EN PN63 Flange (Type D)",
+        "BBJ1": "JIS 10K Flange (RF, FF) (*14,*20)",
+        "BBJ2": "JIS 20K Flange (RF) (*20)",
+        "BBJ4": "JIS 40K Flange (RF) (*20)"
+      },
+      "flange_CW12MW": {
+        "HBA1": "ASME Class 150 Flange (RF)",
+        "HBA2": "ASME Class 300 Flange (RF)",
+        "HBE2": "EN PN16 (or 16/10) Flange (Type B1) (*17)",
+        "HBE4": "EN PN40/25 (or /16/10) Flange (Type B1) (*17)",
+        "HBJ1": "JIS 10K Flange (RF) (*20)",
+        "HBJ2": "JIS 20K Flange (RF) (*20)"
+      }
+    },
+    "6_housing_coating": {
+      "codes": {
+        "-1": "Standard Material with Standard Coating",
+        "-2": "Standard Material with Rugged Coating"
+      }
+    },
+    "7_cable_entry": {
+      "note": "*8. *9 ASME entries. *12 remote-sensor Japan-flameproof must use code 0. *13 Japan Ex-gland O-ring is EPDM. J/K are Japan-Flameproof integral only.",
+      "codes": {
+        "0": "JIS G1/2 Female, one electrical connection (*12)",
+        "2": "ASME 1/2 NPT Female, one electrical connection (*9)",
+        "4": "ISO M20x1.5 Female, one electrical connection",
+        "A": "JIS G1/2 Female, two electrical connections",
+        "C": "ASME 1/2 NPT Female, two electrical connections (*9)",
+        "E": "ISO M20x1.5 Female, two electrical connections",
+        "J": "[Japan Flameproof integral] ISO M20x1.5 F, two connections + two Ex-glands (JIS G1/2 F, *13)",
+        "K": "[Japan Flameproof integral] ISO M20x1.5 F, two connections + one Ex-gland (*13) + one Ex-plug"
+      }
+    },
+    "8_comm_io": {
+      "note": "Single-sensor: JA/JB/F0/M0. Dual-sensor: JJ/JF/FJ/FF (upstream/downstream pairs). HART is HART 7.",
+      "codes": {
+        "JA": "HART 7, 4-20 mA DC, Pulse/Status output",
+        "JB": "HART 7, 4-20 mA DC, Pulse/Status output, Analog input",
+        "F0": "FOUNDATION Fieldbus Communication",
+        "M0": "Modbus Communication, Pulse/Status output",
+        "JJ": "Dual - up HART7 4-20mA Pulse/Status / down HART7 4-20mA Pulse/Status",
+        "JF": "Dual - up HART7 4-20mA Pulse/Status / down FOUNDATION Fieldbus",
+        "FJ": "Dual - up FOUNDATION Fieldbus / down HART7 4-20mA Pulse/Status",
+        "FF": "Dual - up FOUNDATION Fieldbus / down FOUNDATION Fieldbus"
+      }
+    },
+    "9_display": {
+      "note": "*10 display NOT available for remote sensor.",
+      "codes": {
+        "1": "With Display (integral)",
+        "N": "Without Display / Remote Sensor"
+      }
+    },
+    "fixed_tail": "After display: '0' (Always 0), '0' (Always 0), then '00', then '/' options.",
+    "10_options": "/[code] - see Option Specifications page (not yet captured). Known referenced: /LAT (low ambient -50C), /VE (EAC marking), /SPG (silver-plated SS gasket), /TS1 //TS2 (TSG marking - conflicts with JIS conn *20), /A (lightning protector - lowers supply voltage)."
+  },
+  "cross_position_rules": [
+    "*21: Body type -4 (High Pressure Reduced Bore) CANNOT combine with shedder bar B/C/D/E/H (temp-sensor, high-temp, or cryogenic).",
+    "*2: Temp-sensor shedder bars (B/P/D/R/H/V) with option /LAT require process temp >= -40C.",
+    "*19: EAC certifications (-004/-GF2/-GS2) require option /VE.",
+    "*20: JIS process connections (BAJ*, HAJ*, BBJ*, HBJ*) cannot combine with TSG marking option /TS1 or /TS2.",
+    "*9/*17: Explosion-protection models restrict flange/wafer type - cross-check the certification code against the connection per 'Explosion Protection Specifications' (page not yet captured).",
+    "*7: ASME Class 1500 flange codes (BBA6, BCA6) -> body material becomes F316. VY040 reduced-bore max working pressure = flange rating x 0.8.",
+    "*18: Nickel alloy (CW-12MW, HH/H* codes) body pressure rating follows the CF8M rating, not a higher nickel rating.",
+    "*14: Connection size 250mm+ uses FF (flat face) flange face.",
+    "Display code 9_display=N is required for remote sensor (display lives on the VY4A remote transmitter instead).",
+    "MATERIAL/CONNECTION consistency: process-connection prefix must match body material - CF8M body uses B*/E* connection codes; CW-12MW body uses H* connection codes. A mismatch (e.g. HH body with BAA1 connection) is invalid."
+  ],
+  "companion_models": {
+    "_note": "A REMOTE vortex installation = 3 line items. An INTEGRAL installation = just the VY[size] unit (display code 1).",
+    "VY4A_remote_transmitter": {
+      "desc": "Vortex flowmeter remote transmitter - pairs with a remote sensor (VY[size] with display N) via signal cable.",
+      "positions": {
+        "1_certification": "Same certification set as integral (-000 to -US2)",
+        "2_housing_coating": {
+          "-1": "Standard coating",
+          "-2": "Rugged coating"
+        },
+        "3_cable_entry": "Same set as integral position 7 (0/2/4/A/C/E/J/K)",
+        "4_comm_io": {
+          "JA": "HART 7 4-20mA Pulse/Status",
+          "JB": "HART 7 +Analog input",
+          "F0": "FOUNDATION Fieldbus",
+          "M0": "Modbus Pulse/Status"
+        },
+        "5_display": {
+          "1": "With Display",
+          "N": "Without Display"
+        },
+        "6_options": "/[code] - see Option Specifications. *5 /VE required for EAC."
+      },
+      "format": "VY4A-[cert][housing][cable][comm][display]00/[options]"
+    },
+    "VY1C_signal_cable": {
+      "desc": "Vortex flowmeter signal cable - connects remote sensor to remote transmitter. 6-wire double-shielded, up to 50m (specify -0 and cut if >50m).",
+      "positions": {
+        "1_cable_end": {
+          "-0": "Without end finish (*1)",
+          "-1": "With end finish"
+        },
+        "2_cable_length": "-05M(5m) ... -95M(95m) in 5m steps. *2: usable to 95m but actual length must be <=50m; for >50m select -0 and shorten.",
+        "3_options": "/C1(1 set end-finish parts) ... /C9(9 sets)"
+      },
+      "format": "VY1C-[cable_end][length]/[options]",
+      "note": "*1 one set of end-finish parts included; cable length +340mm for finishing."
+    }
+  },
+  "_computed_sizing_pending": {
+    "what": "The low-flow / Reynolds floor check - will the meter actually read at the customer's flow? This is the vortex's defining computed result.",
+    "why": "Accuracy is '% of reading', confirming a minimum measurable flow exists. Below it the meter doesn't shed vortices and reads nothing.",
+    "needs": "Flow-range table (min/max measurable flow by size and fluid) and/or K-factor + minimum-Reynolds data. NOT present in the Model & Suffix Code pages (45-52). Likely in a flow-range/specifications section or a companion 'Flowmeter Selection Guide' (referenced in *17).",
+    "build_now": "Build the configurator (code assembly) now. Wire a RESULT SLOT for the computed low-flow verdict per Section 15, but leave it returning 'sizing data not yet loaded - cannot confirm low-flow' until the flow-range data is provided. This proves the result-contract seam without faking sizing numbers.",
+    "test_case": "KFI 09400-FT-64: 4-inch (VY100), Dowtherm A liquid, 255/300/345 gpm. Once flow-range data is in, this is the real low-flow check to run.",
+    "status_update_2026_06_22": "LOW-FLOW CALIBRATED, not pending. A real Yokogawa VY sizing output (3in/80mm, 150 psig saturated steam) was provided. Verified: min velocity 7.61 ft/s (constant across sizes), density 5.81 kg/m3 (matches our steam table exactly). Model adopted: v_min = max(1 m/s mechanical, sqrt(31.3/rho) signal floor) - the rho*v^2 constant K=31.3 Pa calibrated to that point. Reproduces 7.61 ft/s at 150psig and extrapolates with correct physics (lower steam pressure -> higher velocity floor). Flow cutoff is +/-25% screening (nominal vs actual bore); velocity floor is the firm figure. A second sizing sheet at a DIFFERENT steam pressure would confirm the rho*v^2 scaling across pressures.",
+    "second_anchor_2026_06_22": "Liquid anchor added from Yokogawa water/condensate sizing output: min velocity 0.305 m/s (1.0 ft/s) constant across sizes. Confirmed liquid and steam are DIFFERENT regimes (single rho*v^2 law fits neither - K would be 93 vs 31). Final model: v_min = max(0.305 m/s liquid mechanical floor, sqrt(31.3/rho) signal floor). Reproduces BOTH real anchors exactly (water 0.305, steam150 2.32 m/s). Corrected liquid floor was 3.3x too high before (had 1 m/s, real is 0.305 m/s). Flow cutoff still +/-25% screening (nominal vs actual bore, consistent across both sheets)."
+  },
+  "allied_defaults_CONFIRMED": {
+    "_status": "CONFIRMED from Allied live inventory (2026-06-22). Derived from 13 stocked/reordered VY models - these are the configurations Allied actually carries, the strongest possible source. Pattern verified by parsing all 13 codes.",
+    "standard_build": "VY[size]-FF1-0ABLB[B/A]A1-12JA100",
+    "fixed_defaults": {
+      "Certification": {
+        "code": "-FF1",
+        "desc": "FM Explosionproof (dual-seal)",
+        "source": "Allied inventory (9 of 13)",
+        "rule": "OVERRIDE-ONLY fail-safe, same logic as AXG -C and EJA /FU1: an explosion-protected unit is safe in a general-purpose area, not vice versa. Hold -FF1 unless EXPLICITLY told general-purpose; then drop to -001 (Non-Ex CE). Never infer GP and drop it."
+      },
+      "Body type": {
+        "code": "-0",
+        "desc": "General Type",
+        "source": "Allied inventory (12 of 13)"
+      },
+      "Body/shedder material": {
+        "code": "BL",
+        "desc": "Body CF8M / Shedder Duplex 1.4517/S31803",
+        "source": "Allied inventory (12 of 13)",
+        "note": "Inventory PROSE sometimes labels this 'BB / 316SS' but the actual code char is BL - datasheet confirms BL. Trust the code, not the loose description."
+      },
+      "Housing/coating": {
+        "code": "-1",
+        "desc": "Standard material, standard coating",
+        "source": "Allied inventory (11 of 13)",
+        "override": "-2 rugged coating when specified"
+      },
+      "Cable entry": {
+        "code": "2",
+        "desc": "ASME 1/2 NPT female, one electrical connection",
+        "source": "Allied inventory (13 of 13, unanimous)"
+      },
+      "Comm/IO": {
+        "code": "JA",
+        "desc": "HART 7, 4-20 mA, Pulse/Status output",
+        "source": "Allied inventory (12 of 13); matches AXG JA and EJA J HART house standard"
+      },
+      "Display": {
+        "code": "1",
+        "desc": "With display (integral)",
+        "source": "Allied inventory (11 of 13)",
+        "note": "N (no display) only for remote-sensor builds"
+      }
+    },
+    "customer_driven_variables": {
+      "Size": {
+        "desc": "Driven by line size. Inventory spans VY025-VY100; full range VY015-VY400 available."
+      },
+      "Process connection": {
+        "stocked": [
+          "BBA1 (ASME 150 Flanged RF)",
+          "BAA1 (ASME 150 Wafer)",
+          "BAA2 (ASME 300 Wafer)"
+        ],
+        "default": "BBA1 (flanged ASME 150)",
+        "_note": "Flanged BBA1 is the plurality (8 of 13); wafer BAA1 the common alternative - mirrors the AXG flanged-default / wafer-alternative pattern. Resolve from customer connection type + rating."
+      },
+      "Shedder bar": {
+        "default": "A (General Type)",
+        "rule": "DEFAULT to A (general). Do NOT auto-select the temp-compensated B. Application-driven escalation: if the inquiry signals STEAM (saturated/superheated) OR mass/energy flow OR explicit temperature compensation -> recommend B (General Type with built-in Pt1000 temp sensor) and ask to confirm. If plain liquid/gas volumetric flow -> stay on A quietly. If ambiguous -> ASK 'does this need temperature compensation (steam / mass / energy flow)?' as an open question on the quote.",
+        "why": "The B temp-sensor variant exists mainly to let the transmitter compute MASS or ENERGY flow on steam/gas by reading temperature for density compensation. So the question should fire on steam/mass/energy signals, not on every quote. Allied stocks both (7 B / 5 A) - B is common because steam service is common, but A is the correct safe baseline.",
+        "source": "Allied direction (2026-06-22): 'default to general, but ask if needs to be temp compensated.'"
+      }
+    },
+    "integral_vs_remote": "Inventory is overwhelmingly INTEGRAL (display code 1). Remote builds (display N) are the exception. Default to integral single-unit; treat remote (sensor+VY4A+VY1C, 3 items) as an explicit special case."
+  }
+}

@@ -1,0 +1,250 @@
+{
+  "_meta": {
+    "instrument": "EJA530E",
+    "family": "EJA-E (DPharp) pressure transmitter",
+    "source_datasheet": "GS 01C31F01-01EN (uploaded GS_EJA530E.md)",
+    "extracted": "2026-06-10",
+    "status": "USABLE for standard + common-option quoting. Core positions, defaults, standard build, range/span, and explosion default all VERIFIED. Residual: exotic optional-code suffixes (special-order only) and 2 footnote attributions need the clean optional-codes datasheet page - LOW priority. See optional_codes.how_to_finish.",
+    "finishing_pass_2026_06_10": "Second careful read of the datasheet optional-specs section. RESOLVED: part-number format (confirmed against real Allied code), /FU1 explosion default (confirmed by Allied), 8 optional codes recovered cleanly (HAC, PR, HC, HE, CA, CB, CJ, CK). STILL PENDING: single-letter optional-code families whose suffix digit collapsed in text extraction (K/D/C/A families) + footnotes *5/*6 - both need the clean datasheet page.",
+    "schema_note": "Same position/allowed-code/cross-rule schema as axg_model_code.json. Two structural differences from the AXG are called out in _architecture_notes below.",
+    "_architecture_notes": [
+      "DIFFERENCE 1 - Explosion protection is an OPTIONAL CODE here (suffix /FF, /KF, /CF, etc.), NOT a core position like the AXG's FF2. The engine's 'explosion logic' transfers, but on the EJA it attaches as an optional-code group, not a fixed position.",
+      "DIFFERENCE 2 - NEW capability module required: range/span/turndown. The capsule code (position: Measurement span) defines a span range; the customer's required span must fall within it. This module does not exist on the AXG. Data captured under range_span_module below.",
+      "SHARED - Wetted-parts compatibility gate transfers directly; on the EJA the wetted parts are the process connector + diaphragm (see wetted_parts_for_compatibility).",
+      "SHARED - Part-number concatenation logic transfers (preserve specific hyphens). Verified against datasheet example EJA530E-DAS4N-012NN/ (see part_number_format)."
+    ]
+  },
+
+  "positions": [
+    {
+      "position": 1,
+      "name": "Model",
+      "codes": [
+        {"code": "EJA510E", "desc": "Absolute pressure transmitter"},
+        {"code": "EJA530E", "desc": "Gauge pressure transmitter"}
+      ],
+      "note": "Allied is building EJA530E (gauge). EJA510E (absolute) shares this entire structure - the same content file covers both by model code."
+    },
+    {
+      "position": 2,
+      "name": "Output signal",
+      "codes": [
+        {"code": "-D", "desc": "4 to 20 mA DC + digital communication (BRAIN protocol)"},
+        {"code": "-J", "desc": "4 to 20 mA DC + digital communication (HART 5 / HART 7). Specify HART 5 or 7 on order (*1)."},
+        {"code": "-F", "desc": "Digital communication (FOUNDATION Fieldbus). Refer to GS 01C31T02-01EN."},
+        {"code": "-G", "desc": "Digital communication (PROFIBUS PA). Refer to GS 01C31T04-01EN."},
+        {"code": "-Q", "desc": "Low Power, 1 to 5 V DC + digital communication (HART 7)"}
+      ]
+    },
+    {
+      "position": 3,
+      "name": "Measurement span (capsule)",
+      "codes": [
+        {"code": "A", "desc": "10 to 200 kPa (1.45 to 29 psi)"},
+        {"code": "B", "desc": "0.02 to 2 MPa (2.9 to 290 psi)"},
+        {"code": "C", "desc": "0.1 to 10 MPa (14.5 to 1450 psi)"},
+        {"code": "D", "desc": "0.5 to 50 MPa (72.5 to 7200 psi); 5 to 70 MPa when /HG specified (*10)"}
+      ],
+      "drives_module": "range_span_module",
+      "note": "This is the new range/span capability. The two numbers are the minimum settable span and the maximum span (= URL). Customer's required span must fall within the chosen capsule's range."
+    },
+    {
+      "position": 4,
+      "name": "Wetted parts material",
+      "_columns": "Process connector / Diaphragm / Others",
+      "codes": [
+        {"code": "S", "desc": "Process connector 316L SST / Diaphragm Hastelloy C-276 / Others 316L SST or F316L SST. NACE MR0175/ISO15156 & MR0103 conformant. Intergranular corrosion test passed ASTM A262 Practice E (*11).", "_corrected": "Clean datasheet image confirms 'Others' = 316L SST or F316L SST; scrambled text had dropped the F316L alternate."},
+        {"code": "H", "desc": "Process connector Hastelloy C-276 / Diaphragm Hastelloy C-276 / Others Hastelloy C-276 (or ASTM N10276). NACE conformant."}
+      ],
+      "wetted_parts_for_compatibility": ["process connector", "diaphragm"],
+      "note": "These are the wetted parts. The shared compatibility gate applies to the process connector + diaphragm materials. Datasheet *2 warns: be very careful with HCl, sulfuric acid, H2S, sodium hypochlorite, and high-temp steam (>=150C); contact Yokogawa - feed this into the compatibility gate as an escalation trigger."
+    },
+    {
+      "position": 5,
+      "name": "Process connections",
+      "codes": [
+        {"code": "4", "desc": "1/2 NPT female"},
+        {"code": "7", "desc": "1/2 NPT male"},
+        {"code": "8", "desc": "G1/2 DIN 16288 male (*4: threads per withdrawn DIN 16288)"},
+        {"code": "9", "desc": "M20x1.5 DIN 16288 male (*4)"},
+        {"code": "P", "desc": "Direct Mount Diaphragm seal system (EJAC50E). Cannot be specified without a diaphragm seal system. Refer to GS 01C25W01-01EN. (Separate code table.)"}
+      ]
+    },
+    {
+      "position": 6,
+      "name": "(Fixed)",
+      "codes": [{"code": "N", "desc": "Always N"}]
+    },
+    {
+      "position": 7,
+      "name": "(Fixed)",
+      "codes": [{"code": "-0", "desc": "Always 0 (carries a hyphen in the part number - see part_number_format)"}]
+    },
+    {
+      "position": 8,
+      "name": "Amplifier housing",
+      "codes": [
+        {"code": "1", "desc": "Cast aluminum alloy", "typical": true},
+        {"code": "3", "desc": "Cast aluminum alloy with corrosion resistance properties"},
+        {"code": "2", "desc": "ASTM CF-8M stainless steel"}
+      ]
+    },
+    {
+      "position": 9,
+      "name": "Electrical connection",
+      "codes": [
+        {"code": "0", "desc": "G1/2 female, one electrical connection, no blind plugs", "typical": true},
+        {"code": "2", "desc": "1/2 NPT female, two electrical connections, no blind plugs"},
+        {"code": "4", "desc": "M20 female, two electrical connections, no blind plugs"},
+        {"code": "5", "desc": "G1/2 female, two electrical connections with a blind plug"},
+        {"code": "7", "desc": "1/2 NPT female, two electrical connections with a blind plug"},
+        {"code": "9", "desc": "M20 female, two electrical connections with a blind plug"},
+        {"code": "A", "desc": "G1/2 female, two electrical connections and a 316 SST blind plug"},
+        {"code": "C", "desc": "1/2 NPT female, two electrical connections and a 316 SST blind plug"},
+        {"code": "D", "desc": "M20 female, two electrical connections and a 316 SST blind plug"}
+      ],
+      "critical_cross_rule": "Explosion-protection optional codes (/FF, /FS, /KF, /KS, /CF, /CS, /SF, /SU, etc.) are applicable ONLY for electrical connection code 2, 4, 7, 9, C and D. The typical/default code 0 (one connection) is NOT compatible with any explosion-protection code. SEE allied_defaults note."
+    },
+    {
+      "position": 10,
+      "name": "Integral indicator",
+      "codes": [
+        {"code": "D", "desc": "Digital indicator"},
+        {"code": "E", "desc": "Digital indicator with range setting switch (push button)"},
+        {"code": "N", "desc": "None"}
+      ]
+    },
+    {
+      "position": 11,
+      "name": "Mounting bracket",
+      "codes": [
+        {"code": "L", "desc": "316 SST 2-inch pipe mounting", "typical": true},
+        {"code": "N", "desc": "None"}
+      ]
+    }
+  ],
+
+  "part_number_format": {
+    "verified_example": "EJA530E-DAS4N-012NN/",
+    "parsing": "EJA530E | - | D(output) A(span) S(wetted) 4(proc conn) N(always N) | - | 0(always 0) 1(amp housing) 2(elec conn) N(indicator) N(bracket) | /optional codes",
+    "rule": "Concatenate: MODEL + '-' + [output][span][wetted][procConn][N] + '-' + [0][ampHousing][elecConn][indicator][bracket] + optional codes. Two hyphens only: one after the model, one before the always-0. Same preserve-specific-hyphens logic as the AXG.",
+    "verify": "Confirm whether the output-signal hyphen (e.g. '-D') is rendered separately or absorbed into the model hyphen. In the example EJA530E-DAS4N, the output 'D' follows the model hyphen directly, so the '-D' output hyphen appears to merge with the model hyphen (one hyphen, not two). CONFIRM against a known NetSuite part number."
+  },
+
+  "explosion_protection_optional_codes": {
+    "_note": "On the EJA, explosion protection is an OPTIONAL CODE group (suffix), not a core position. The '◊' group from the datasheet. All require electrical connection code 2/4/7/9/C/D (NOT 0).",
+    "applicable_electrical_connection_codes": ["2", "4", "7", "9", "C", "D"],
+    "not_applicable_for_output_Q": ["FU", "CU", "SU", "KU and combined types (*3: combined types not applicable for output Q)"],
+    "codes": [
+      {"code": "FF", "desc": "FM Explosionproof. Class I Div 1 Groups B,C,D; Dust-ignitionproof Class II/III Div 1 Groups E,F,G. Type 4X. FACTORY SEALED. T6, Amb -40 to 60C."},
+      {"code": "FS", "desc": "FM Intrinsically safe. Class I Div 1 Groups A,B,C,D; AEx ia IIC; Nonincendive Div 2. Type 4X, T4, Amb -60 to 60C."},
+      {"code": "FU1", "desc": "Combined FF1 and FS1 (FM Explosionproof + FM Intrinsically Safe on one unit).", "_note": "Allied STANDARD stock approval (confirmed 2026-06-10). Datasheet text rendered this as 'FU' with the suffix digit dropped; Allied confirms the ordered code is FU1."},
+      {"code": "KF", "desc": "ATEX Flameproof. II 2 G Ex db IIC T6...T4 Gb, II 2 D Ex tb IIIC T85C Db. IP66/IP67."},
+      {"code": "KS", "desc": "ATEX Intrinsically safe. II 1 G Ex ia IIC T4 Ga."},
+      {"code": "KU", "desc": "ATEX Multiple types of protection (KF22, KS21 or Ex ic)."},
+      {"code": "CF", "desc": "CSA Explosionproof. Class I Groups B,C,D; Dual Seal certified. Ex d IIC T6...T4."},
+      {"code": "CS", "desc": "CSA Intrinsically safe. Class I Div 1 Groups A,B,C,D; Ex ia IIC T4."},
+      {"code": "CU", "desc": "Combined CF1 and CS1."},
+      {"code": "SF", "desc": "IECEx Flameproof. Ex db IIC T6...T4 Gb, Ex tb IIIC T85C Db."},
+      {"code": "SU", "desc": "IECEx Intrinsically safe (Ex ia / Ex ic) + flameproof SF22."}
+    ],
+    "verify": "Datasheet uses suffix '1'/'2' variants (e.g. FF1, FS1, KF22, KS21) that the text extraction partially dropped. Confirm exact suffix digits (FF vs FF1) against Yokogawa ordering data before quoting.",
+    "shared_with_axg": "The certification CONCEPT and Class/Division/Zone structure is shared Yokogawa logic. The exact codes differ from the AXG's FF2 form (AXF/AXG use FF2/FS2-style; EJA uses FF/FS/KF...). Treat the certification framework as a shared service, the specific codes as per-instrument content."
+  },
+
+  "range_span_module": {
+    "_note": "NEW capability for pressure transmitters. Validate the customer's required span/range against the chosen capsule code.",
+    "capsules": [
+      {"code": "A", "min_span_kpa": 10, "max_span_kpa": 200, "min_span_psi": 1.45, "max_span_psi": 29, "turndown": "20:1"},
+      {"code": "B", "min_span_mpa": 0.02, "max_span_mpa": 2, "min_span_psi": 2.9, "max_span_psi": 290, "turndown": "100:1"},
+      {"code": "C", "min_span_mpa": 0.1, "max_span_mpa": 10, "min_span_psi": 14.5, "max_span_psi": 1450, "turndown": "100:1"},
+      {"code": "D", "min_span_mpa": 0.5, "max_span_mpa": 50, "min_span_psi": 72.5, "max_span_psi": 7200, "turndown": "100:1", "with_HG": "5 to 70 MPa (720 to 10150 psi)"}
+    ],
+    "validation_rule": "Customer's required span must be >= the capsule's min span and <= the capsule's max span (URL). If the required span falls in an overlap between capsules, prefer the capsule where the required span sits comfortably above its minimum (better turndown = better accuracy). Flag if required span is below the smallest capsule's minimum or above the largest capsule's maximum.",
+    "calibration_rule": {
+      "_note": "Allied tribal knowledge (confirmed 2026-06-10): the customer's stated range is not only used to pick the capsule - it becomes the factory CALIBRATED range the unit ships set to. This is a recorded order deliverable, distinct from capsule selection.",
+      "three_point_calibration": "Yokogawa calibrates at three points: 0, the span MIDPOINT, and full span. For a stated 0-100 psi range -> calibrate 0 / 50 / 100. Midpoint = arithmetic center of the span (for a 0-start range, span/2). Ranges effectively always start at zero in Allied's service; if a non-zero start ever occurs (e.g. 20-120), midpoint is the true center (20 / 70 / 120).",
+      "stated_range": "When the customer gives a specific range, RECORD it as the calibrated range on the quote/order and calibrate 0 / (mid) / (full). Carry the range through - do not consume it only to pick the capsule and then drop it.",
+      "no_range_default": "When NO range is stated, calibrate to the chosen capsule's FULL span. For the standard capsule B that is 0 / 145 / 290 psi (145 = midpoint of B's 290 psi max span). This is a real intended default, not a placeholder: no customer range -> ship calibrated to full capsule span, field-rerangeable later.",
+      "turndown_link": "The calibrated span relative to the capsule's max span IS the turndown ratio (e.g. 100 psi calibrated on capsule B's 290 max = 2.9:1). Compute turndown from the calibrated range and surface the accuracy note when high.",
+      "output_on_quote": "Every pressure-transmitter quote should state the calibrated range (e.g. 'Calibrated 0-100 psi') as a deliverable line, in addition to the model code."
+    },
+    "turndown_note": "Turndown = max span / set span. Yokogawa accuracy degrades at very high turndown; flag for review if the customer's set span requires turndown beyond a comfortable ratio (verify the exact accuracy-vs-turndown formula from the datasheet accuracy section, lines ~380-490, before encoding a hard threshold).",
+    "verify": "Confirm min/max span figures and exact turndown ratios from the datasheet performance section. The kPa/MPa/psi values above are read from the model-code capsule table and should be cross-checked against the Span and Range Limits table."
+  },
+
+  "cross_position_rules": [
+    {"id": "capsuleD_not_with_materialH", "rule": "Measurement span (capsule) code D is NOT applicable with wetted parts material code H. (*4)", "status": "verified"},
+    {"id": "explosion_requires_two_connection", "rule": "Any explosion-protection optional code requires electrical connection code 2/4/7/9/C/D. Code 0 (typical) is incompatible.", "status": "verified", "critical": true},
+    {"id": "output_G_restrictions", "rule": "Some option not applicable for output signal code G (*8). Exact option attribution lost in text extraction.", "status": "verify_attribution"},
+    {"id": "output_F_restrictions", "rule": "Some option not applicable for output signal code F (*9). Exact option attribution lost in text extraction.", "status": "verify_attribution"},
+    {"id": "output_Q_restrictions", "rule": "Several options not applicable for output signal code Q (*3, *16, *22): combined explosion types, NAMUR NE43, functional safety SLT. Q is non-NAMUR-compliant.", "status": "verified_partial"},
+    {"id": "main_footnote_5_6", "rule": "Footnotes *5 and *6 in the model section restrict by electrical connection code (0/5/7/9/A), but text extraction detached them from the position they modify. MUST verify which positions *5/*6 govern before relying on them.", "status": "verify_attribution"}
+  ],
+
+  "optional_codes": {
+    "_note": "Re-read carefully from the datasheet (2026-06-10, second pass). Codes split into two groups: cleanly_readable (two-character codes survived text extraction intact and are usable) and ambiguous_suffix (single-letter codes whose distinguishing digit was collapsed in extraction - DO NOT quote these until confirmed from the clean optional-codes datasheet page).",
+    "cleanly_readable": [
+      {"code": "HAC", "desc": "High accuracy type", "restrictions": "*16 not for output Q; *23 not with diaphragm seal", "status": "verified"},
+      {"code": "PR", "desc": "Painting - amplifier cover AND terminal cover, Munsell 7.5 R4/14", "status": "verified"},
+      {"code": "HC", "desc": "316 SST zero-adjustment screw and setscrews (*14; included with amplifier housing code 2)", "status": "verified"},
+      {"code": "HE", "desc": "Fluoro-rubber O-rings (all amplifier-housing O-rings). Lower ambient limit -15C (5F).", "status": "verified"},
+      {"code": "CA", "desc": "Data config (HART): software damping, descriptor, message", "status": "verified"},
+      {"code": "CB", "desc": "Data config (BRAIN): software damping", "status": "verified"},
+      {"code": "CJ", "desc": "Data config (HART): damping, descriptor, message, external zero-adjust prohibition", "status": "verified"},
+      {"code": "CK", "desc": "Data config (BRAIN): software damping, external zero-adjust prohibition", "status": "verified"},
+      {"code": "HG", "desc": "High pressure-proof structure: max pressure & span 70 MPa (*18 capsule D only)", "status": "verified"},
+      {"code": "X", "desc": "Anti-corrosion (epoxy) coating (*1 not with a color-change painting option)", "status": "high_confidence"},
+      {"code": "N", "desc": "Wired tag plate - 316 SST, wired onto the transmitter", "status": "high_confidence"}
+    ],
+    "ambiguous_suffix_DO_NOT_QUOTE": [
+      {"family": "Painting - amplifier cover only", "shown_as": "P", "issue": "single 'P' may be a distinct code or carry a suffix; the paired terminal-cover version is PR. Confirm exact code.", "status": "verify"},
+      {"family": "Lightning protector", "shown_as": "A", "issue": "shown as bare 'A' but 'A' also appears for gold-plated diaphragm - distinguishing suffix lost (likely A1). Confirm.", "status": "verify"},
+      {"family": "Oil-prohibited use (degrease, +/- fluorinated oil fill, +/- dehydrating, +/- certificates)", "shown_as": "K (multiple variants)", "issue": "four-to-six K-variants (K1/K2/K5/K6 etc.) collapsed to bare 'K'. Suffix digits lost.", "status": "verify"},
+      {"family": "Capsule fill fluid (fluorinated oil)", "shown_as": "K", "issue": "K-variant, suffix lost", "status": "verify"},
+      {"family": "Calibration units (psi / bar / kgf-cm2)", "shown_as": "D (three variants)", "issue": "psi/bar/kgf shown all as 'D' - must be D1/D3/D4. Suffix digits lost. (*3 not for output Q)", "status": "verify"},
+      {"family": "Output limits / failure operation (down-scale / NAMUR NE43 / up-scale)", "shown_as": "C (three variants)", "issue": "three variants shown all as 'C' - must be C1/C2/C3. Suffix digits lost.", "status": "verify"},
+      {"family": "Gold-plated diaphragm (hydrogen permeation)", "shown_as": "A", "issue": "bare 'A', ambiguous with lightning protector. (*13 material code S only)", "status": "verify"},
+      {"family": "Material certificate (EN 10204 3.1B)", "shown_as": "M / MA", "issue": "process-connector vs +diaphragm+capsule variants; suffixes partial", "status": "verify"},
+      {"family": "Calibration certificate", "shown_as": "L", "issue": "text/traceability/standards-list variants (L1-L4); suffixes lost", "status": "verify"},
+      {"family": "Pressure/leak test certificate", "shown_as": "T", "issue": "per-capsule test variants (T1-T5); suffixes lost", "status": "verify"},
+      {"family": "Additional blind plug", "shown_as": "PP", "issue": "(*24 NOT for electrical connection 0/2/4) - confirm code", "status": "verify"},
+      {"family": "Functional safety (SIL) low-temp", "shown_as": "SLT", "issue": "(*21 not EJA510E; *22 not output F/G/Q or diaphragm seal) - confirm code", "status": "verify"},
+      {"family": "PED (European Pressure Equipment Directive 2014/68/EU)", "shown_as": "PE / PED", "issue": "(*15 capsule D; *16 not output Q) - confirm exact code", "status": "verify"}
+    ],
+    "how_to_finish": "Run the EJA530E datasheet's OPTIONAL SPECIFICATIONS page (general + explosion-protected) through the markdown tool, or send a clean image of that page. The clean page resolves all ambiguous_suffix codes the same way the model-code-page image resolved the core positions (and caught the F316L correction). LOW PRIORITY: these are special-order options; Allied's standard build and common options (HAC, data-config) are already verified."
+  },
+
+  "calibration_units_D_family": {
+    "_status": "VERIFIED from datasheet GS 01C31F01-01EN Span and Range Limits table (2026-06-22). The table column headers explicitly label the unit columns: MPa, psi (/D1), bar (/D3), kgf/cm2 (/D4). Family fully resolved.",
+    "codes": {
+      "(none)": "MPa (base unit, no suffix)",
+      "/D1": "psi  <-- ALLIED STANDARD STOCK (US house unit)",
+      "/D3": "bar",
+      "/D4": "kgf/cm2"
+    },
+    "allied_standard": "/D1 (psi) is part of Allied's standard build - stocked on all units. Confirmed by Allied stocking + datasheet definition.",
+    "calibration_link": "/D1 is what makes the calibration_rule produce PSI values. A stated 0-100 psi range -> calibrated 0/50/100 IN PSI because /D1 sets psi as the calibration/display unit. The suffix and the 3-point calibration rule are two halves of the same house standard.",
+    "engine_note": "Append /D1 to the standard build by default (Allied stocks it). If a customer ever needs bar or kgf/cm2 calibration, swap to /D3 or /D4 respectively - overridable like any default."
+  },
+    "allied_defaults": {
+    "_status": "CONFIRMED from Allied standard stock code EJA530E-JBS4N-012EL/FU1 (2026-06-10). Add /D1 (psi calibration units) per Allied stocking - verified 2026-06-22. Full standard stock code: EJA530E-JBS4N-012EL/FU1/D1.",
+    "standard_build": "EJA530E-JBS4N-012EL/FU1/D1",
+    "fixed_defaults": {
+      "Output signal": {"code": "-J", "desc": "4-20 mA + HART (5/7)", "source": "Allied standard", "note": "Matches the AXG's HART house preference (JA). Confirm HART 5 vs 7 per order."},
+      "Wetted parts material": {"code": "S", "desc": "316L process connector / Hastelloy C-276 diaphragm / 316L or F316L others", "source": "Allied standard"},
+      "Amplifier housing": {"code": "1", "desc": "Cast aluminum alloy", "source": "Allied standard"},
+      "Electrical connection": {"code": "2", "desc": "1/2 NPT female, two electrical connections, no blind plug", "source": "Allied standard", "critical_note": "Code 2 (NOT the datasheet-typical 0) is an explosion-compatible two-connection code. This confirms the explosion interlock: Allied's standard electrical connection is already explosion-ready. See open_question_explosion below."},
+      "Integral indicator": {"code": "E", "desc": "Digital indicator with range-setting push button", "source": "Allied standard"},
+      "Explosion protection (optional code)": {"code": "/FU1", "desc": "Combined FM Explosionproof (FF1) + FM Intrinsically Safe (FS1)", "source": "Allied standard (stocking position + fail-safe)", "note": "Allied STOCKS the explosion-protected /FU1 build - the EJA analog of the AXG -C/FF2 default, and the same one-directional safety logic: an explosion-protected unit is safe in a general-purpose area, not vice versa. The combined FF1+FS1 gives both explosionproof and intrinsically-safe install options on one unit. Requires electrical connection 2/4/7/9/C/D (satisfied by the standard '2'). Like the AXG -C default, treat as override-only: hold /FU1 unless explicitly told general-purpose; do not infer GP and drop it."}
+    },
+    "customer_driven_variables": {
+      "_note": "These are the positions Allied stocks across and resolves per inquiry - the engine should set these from the customer's requirement, not from a fixed default.",
+      "Measurement span (capsule)": {"stocked": ["A", "B", "C"], "desc": "A=10-200 kPa, B=0.02-2 MPa, C=0.1-10 MPa. D (0.5-50 MPa) is per-order, not stocked. Resolve from the customer's required pressure span via range_span_module.", "default_if_unspecified": "B", "_default_note": "B is the standard-code capsule; use only as a placeholder - the capsule should really be driven by the customer's pressure range."},
+      "Process connections": {"stocked": ["4", "7"], "desc": "4 = 1/2 NPT female, 7 = 1/2 NPT male. Resolve from customer; default 4 (female) per standard build.", "default_if_unspecified": "4"},
+      "Mounting bracket": {"stocked": ["L", "N"], "desc": "L = 316 SST 2-inch pipe mounting, N = none. Resolve from customer; default L per standard build.", "default_if_unspecified": "L"}
+    },
+    "explosion_resolved": "RESOLVED (2026-06-10): Allied stocks /FU1 (combined FM explosionproof FF1 + intrinsically safe FS1) as the standard explosion-protection code. This is the EJA analog of the AXG -C/FF2 default and follows the same override-only fail-safe rule. The standard electrical connection 2 satisfies the explosion interlock (requires 2/4/7/9/C/D). Full standard stock code: EJA530E-JBS4N-012EL/FU1.",
+    "part_number_check": "Standard build concatenates as EJA530E-JBS4N-012EL - matches the format rule (model + '-' + JBS4N + '-' + 012EL). Note: NO second hyphen issue here because output 'J' follows the model hyphen directly (EJA530E-J...), confirming the output-signal hyphen merges with the model hyphen. Format rule VERIFIED against a real Allied code."
+  }
+}

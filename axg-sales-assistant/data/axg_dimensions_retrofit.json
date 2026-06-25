@@ -1,0 +1,177 @@
+{
+  "_meta": {
+    "asset": "AXG Dimensions Lookup + Retrofit / Replacement Advisor",
+    "purpose": "Phase-2 truth-layer tables. (1) Yokogawa AXG lay lengths for fitment answers. (2) Competitor cross-reference so the agent can tell a customer whether an AXG drops into an existing competitor spool.",
+    "units": "inches unless noted",
+    "status": "PILOT DRAFT - requires verification (see _verification on each table)",
+    "companion_file": "axg_model_code.json (the configurator / model-code truth layer)"
+  },
+
+  "yokogawa_dimensions": {
+    "_note": "Yokogawa AXG lay length (face-to-face). The wafer values were cross-checked against datasheet GS 01E22A01-01EN and MATCH on every overlapping size (1in=2.30, 1.5in=2.69, 2in=3.09, 3in=4.66, 4in=5.84, and the 2.5/5/10/15mm rows=3.11). That agreement is the second-source confirmation.",
+    "_verification": "BOTH columns now VERIFIED against the datasheet flange/wafer dimension tables (GS 01E22A01-01EN pp. 81-82, 2026-06-10). Flanged column matched the prior Allied data exactly on every size. 20in = 23.62 in (600 mm) datasheet-confirmed.",
+    "_ring_addition_note": "IMPORTANT: these lay lengths are the BARE meter (no grounding rings). When optional grounding rings are selected, add the ring value from 'grounding_ring_lay_length_additions' below to get the effective face-to-face for fitment.",
+
+    "flanged_150": {
+      "standard": "ASME Class 150 flange",
+      "max_size": "data available to 20 in (500 mm)",
+      "status": "verified",
+      "rows": [
+        {"size": "2.5 mm (0.1 in)", "lay_length": 5.83},
+        {"size": "5 mm (0.2 in)",   "lay_length": 5.83},
+        {"size": "10 mm (0.4 in)",  "lay_length": 5.83},
+        {"size": "15 mm (0.5 in)",  "lay_length": 7.80},
+        {"size": "1 in",            "lay_length": 7.78},
+        {"size": "1.5 in",          "lay_length": 7.78},
+        {"size": "2 in",            "lay_length": 7.78},
+        {"size": "3 in",            "lay_length": 7.78},
+        {"size": "4 in",            "lay_length": 9.74},
+        {"size": "6 in",            "lay_length": 11.71},
+        {"size": "8 in",            "lay_length": 13.68},
+        {"size": "10 in",           "lay_length": 17.54},
+        {"size": "12 in",           "lay_length": 19.51},
+        {"size": "14 in",           "lay_length": 21.48},
+        {"size": "16 in",           "lay_length": 23.44},
+        {"size": "20 in",           "lay_length": 23.62, "note": "= 600 mm exactly; datasheet-confirmed"}
+      ]
+    },
+
+    "grounding_ring_lay_length_additions": {
+      "_note": "Add to the bare lay length L (total for both ends) when grounding rings are selected. Source: datasheet flanged dimension table p. 82, verified 2026-06-10.",
+      "_fitment_significance": "Thin-type (your /GRL default) adds only ~0.08-0.16 in - within the drop-in tolerance, effectively negligible. But ELECTRODE-TYPE rings add 1.1-1.6 in, which BLOWS the fit tolerance - a retrofit with electrode-type grounding must use effective (L + ring) for fitment, not bare L.",
+      "thin_type_GRL_GRH_GRV": {"add_in": 0.08, "add_in_250_400mm": 0.16, "note": "negligible for fitment"},
+      "thick_type_GRN_GRJ_GRW": {"add_in": 0.24, "add_in_500mm": 0.31},
+      "thick_type_with_gaskets": {"add_in": 0.39, "add_in_some": 0.47},
+      "metal_hat_GSN_GDN": {"add_in": 0.24},
+      "electrode_type_GRP_GRT": {"add_in": "1.10 to 1.34", "note": "significant - must factor into fitment"},
+      "electrode_type_with_gaskets": {"add_in": "1.26 to 1.57", "note": "significant - must factor into fitment"}
+    },
+
+    "wafer": {
+      "standard": "Wafer (sandwich)",
+      "max_size": "8 in",
+      "max_size_rule": "Wafer construction is not offered above 8 in by ANY manufacturer. Requests for 10 in or larger wafer are invalid - the agent must redirect to flanged, not search for a lay length.",
+      "rows": [
+        {"size": "2.5 mm (0.1 in)", "lay_length": 3.11},
+        {"size": "5 mm (0.2 in)",   "lay_length": 3.11},
+        {"size": "10 mm (0.4 in)",  "lay_length": 3.11},
+        {"size": "15 mm (0.5 in)",  "lay_length": 3.11},
+        {"size": "1 in",            "lay_length": 2.30},
+        {"size": "1.5 in",          "lay_length": 2.69},
+        {"size": "2 in",            "lay_length": 3.09},
+        {"size": "3 in",            "lay_length": 4.66},
+        {"size": "4 in",            "lay_length": 5.84},
+        {"size": "6 in",            "lay_length": 7.74},
+        {"size": "8 in",            "lay_length": 9.70}
+      ]
+    }
+  },
+
+  "competitor_crossref": {
+    "_note": "Competitor lay lengths for retrofit assessment. Keyed on (manufacturer, size, connection). Empty cells = data not collected / connection not offered by that maker.",
+    "_verification": "STAMP REQUIRED: competitor specs drift between product generations (note Foxboro 'Old' vs '9700/New' already differ materially). Every competitor figure needs a 'verified-as-of [date]' before it backs a fitment promise. Confirm WHICH generation the customer has before quoting a fit.",
+    "verified_as_of": "DATE NOT SET - fill in when figures are confirmed",
+
+    "flanged_150": {
+      "columns": ["yokogawa", "rosemount_8705", "foxboro_old", "foxboro_9700", "endress"],
+      "rows": [
+        {"size": "15 mm (0.5 in)", "yokogawa": 7.80,  "rosemount_8705": 7.88,  "foxboro_old": 7.87,  "foxboro_9700": 7.87,  "endress": 7.87},
+        {"size": "1 in",           "yokogawa": 7.78,  "rosemount_8705": 7.88,  "foxboro_old": 7.87,  "foxboro_9700": 7.87,  "endress": 7.87},
+        {"size": "1.5 in",         "yokogawa": 7.78,  "rosemount_8705": 7.87,  "foxboro_old": 7.87,  "foxboro_9700": 7.87,  "endress": 7.87},
+        {"size": "2 in",           "yokogawa": 7.78,  "rosemount_8705": 7.87,  "foxboro_old": 7.87,  "foxboro_9700": 7.87,  "endress": 7.87},
+        {"size": "3 in",           "yokogawa": 7.78,  "rosemount_8705": 7.87,  "foxboro_old": 7.87,  "foxboro_9700": 7.87,  "endress": 7.87},
+        {"size": "4 in",           "yokogawa": 9.74,  "rosemount_8705": 9.84,  "foxboro_old": 9.84,  "foxboro_9700": 9.84,  "endress": 9.84},
+        {"size": "6 in",           "yokogawa": 11.71, "rosemount_8705": 11.81, "foxboro_old": 11.84, "foxboro_9700": 11.81, "endress": 11.80},
+        {"size": "8 in",           "yokogawa": 13.68, "rosemount_8705": 13.78, "foxboro_old": 13.80, "foxboro_9700": 13.78, "endress": 13.80},
+        {"size": "10 in",          "yokogawa": 17.54, "rosemount_8705": 15.00, "foxboro_old": 17.70, "foxboro_9700": 17.71, "endress": 17.70},
+        {"size": "12 in",          "yokogawa": 19.51, "rosemount_8705": 18.01, "foxboro_old": 19.70, "foxboro_9700": 19.69, "endress": 19.70},
+        {"size": "14 in",          "yokogawa": 21.48, "rosemount_8705": null,  "foxboro_old": 21.70, "foxboro_9700": 21.65, "endress": 21.70},
+        {"size": "16 in",          "yokogawa": 23.44, "rosemount_8705": null,  "foxboro_old": 23.60, "foxboro_9700": 23.62, "endress": 23.60},
+        {"size": "20 in",          "yokogawa": 23.62, "rosemount_8705": null,  "foxboro_old": null,  "foxboro_9700": null,  "endress": 25.60}
+      ]
+    },
+
+    "wafer": {
+      "columns": ["yokogawa", "rosemount", "foxboro_old", "foxboro_new", "endress"],
+      "max_size": "8 in (wafer not offered above 8 in)",
+      "rows": [
+        {"size": "15 mm (0.5 in)", "yokogawa": 3.11, "rosemount": null, "foxboro_old": 2.84, "foxboro_new": 2.68, "endress": null},
+        {"size": "1 in",           "yokogawa": 2.30, "rosemount": null, "foxboro_old": 2.81, "foxboro_new": 2.13, "endress": null},
+        {"size": "1.5 in",         "yokogawa": 2.69, "rosemount": null, "foxboro_old": 3.25, "foxboro_new": 3.07, "endress": null},
+        {"size": "2 in",           "yokogawa": 3.09, "rosemount": null, "foxboro_old": 4.20, "foxboro_new": 3.94, "endress": null},
+        {"size": "3 in",           "yokogawa": 4.66, "rosemount": null, "foxboro_old": 5.88, "foxboro_new": 5.91, "endress": null},
+        {"size": "4 in",           "yokogawa": 5.84, "rosemount": null, "foxboro_old": 7.25, "foxboro_new": 7.87, "endress": null},
+        {"size": "6 in",           "yokogawa": 7.74, "rosemount": null, "foxboro_old": 8.00, "foxboro_new": 7.87, "endress": null},
+        {"size": "8 in",           "yokogawa": 9.70, "rosemount": null, "foxboro_old": null, "foxboro_new": null, "endress": null}
+      ]
+    }
+  },
+
+  "fit_verdict_logic": {
+    "_note": "How the agent turns a lay-length delta into a customer-facing verdict. delta = yokogawa - competitor. drop_in_tolerance CONFIRMED by Allied at 1/4 in (2026-06-10).",
+    "drop_in_tolerance_in": 0.25,
+    "flanged": {
+      "drop_in": "abs(delta) <= 0.25 -> 'Direct drop-in. Gasket tolerance absorbs the difference; fits the existing spool.'",
+      "yokogawa_longer": "delta > 0.25 -> 'Existing spool is too short. The pipe must be lengthened/re-fabricated to fit. Flag as added cost.' (HARD fitment problem)",
+      "yokogawa_shorter": "delta < -0.25 -> 'Fits, but leaves a gap. A spacer spool piece or longer studs are needed.' (manageable)"
+    },
+    "wafer": {
+      "_principle": "Wafer sandwiches between the customer's flanges with through-bolts, so fitment depends on the customer's flange gap, not the old meter. Shorter is always fine; only an unusually longer unit is a concern.",
+      "fits": "yokogawa <= competitor + 0.25 -> 'Fits. Confirm stud/bolt length only.'",
+      "check": "yokogawa > competitor + 0.25 -> 'Verify flange gap and stud length.'"
+    }
+  },
+
+  "retrofit_rules": [
+    {
+      "id": "rosemount_8705_large_flanged",
+      "rule": "Replacing a Rosemount 8705 at 10 in or 12 in (flanged) with an AXG: Yokogawa is LONGER (10in: 17.54 vs 15.00 = +2.54; 12in: 19.51 vs 18.01 = +1.50). Existing spool is too short - pipe modification required. Always flag this as added cost, do not promise a clean drop-in.",
+      "severity": "high - fitment blocker"
+    },
+    {
+      "id": "flanged_general_dropin",
+      "rule": "For all other flanged competitor/size pairs in the table, Yokogawa runs ~0.1 in shorter than Foxboro, Endress, and Rosemount. Within tolerance = direct drop-in. (Shorter is the safe direction.)",
+      "severity": "info - favorable"
+    },
+    {
+      "id": "endress_20in_flanged",
+      "rule": "Endress 20 in flanged (25.60) is ~2 in LONGER than the Yokogawa 20 in (23.62, confirmed). Replacing an Endress 20 in with an AXG leaves a ~2 in gap - fits dimensionally (shorter), but needs a spacer spool piece or longer hardware. Flag accordingly.",
+      "severity": "medium - data uncertain"
+    },
+    {
+      "id": "wafer_over_8in",
+      "rule": "Wafer is not available above 8 in for any manufacturer. A request for wafer at 10 in or larger is invalid - redirect the customer to flanged rather than attempting a lay-length lookup.",
+      "severity": "high - hard rule"
+    },
+    {
+      "id": "foxboro_generation",
+      "rule": "Foxboro 'Old' and '9700/New' lay lengths differ materially (e.g. 1 in wafer: 2.81 old vs 2.13 new). Always establish which generation the customer has before assessing fit.",
+      "severity": "medium - ambiguity"
+    },
+    {
+      "id": "wafer_yokogawa_shorter_than_foxboro",
+      "rule": "On wafer, Yokogawa is meaningfully shorter than Foxboro (2in: 3.09 vs 3.94 new; 3in: 4.66 vs 5.91). Fitment is fine (sandwich construction), but set expectations that it is not a dimensional match.",
+      "severity": "info"
+    }
+  ],
+
+  "replacement_model": {
+    "_note": "Yokogawa offers a dedicated WAFER REPLACEMENT MODEL - a curated subset of the AXG built for dropping into an existing installation. When the retrofit advisor concludes a wafer retrofit fits, THIS is the product to quote, not the standard catalog model.",
+    "_source": "Datasheet 'Replacement Model' pages (GS 01E22A01-01EN pp. 49-50), verified 2026-06-10.",
+    "mandatory_code": {
+      "code": "/RW/GAN",
+      "desc": "With Grounding Rings For Wafer Type Replacement Model",
+      "rule": "MANDATORY on every wafer replacement model. The base code is incomplete without it."
+    },
+    "curated_subset_vs_standard": {
+      "sizes": "Common sizes only: 25, 40, 50, 80, 100, 150, 200 mm (not the full 2.5-400 range).",
+      "connection": "Wafer only: AA1 (ASME 150), AA2 (ASME 300), AG1 (JIS F12, 80-200), AJ1 (JIS 10K), AJ2 (JIS 20K). No EN, no JPI.",
+      "construction": "A (Integral), E (Remote/AXG1A), G (Remote/AXG4A). No D (AXFA11).",
+      "grounding": "Grounding Rings only (code 2). No 'None' or 'Built-in' option - rings are forced.",
+      "accuracy": "Standard (B) only. No High Grade (C).",
+      "explosion": "IECEx (SF2/SJ2/ST2), FM (FF2/FJ2/FT2), Japan (JF5), NEPSI (NF2/NJ2/NT2), Korea (PF2), INMETRO (UF2/UJ2/UT2). NOT offered: ATEX (K-codes), FMc Canada (C-codes), EAC (G-codes)."
+    },
+    "house_defaults_compatible": "Allied defaults hold: FF2 and AA1 are both in the replacement subset. A typical Allied wafer replacement = standard build + /RW/GAN.",
+    "advisor_integration": "When fit_verdict returns a wafer drop-in, recommend the Replacement Model (with mandatory /RW/GAN) rather than the standard catalog model."
+  }
+}

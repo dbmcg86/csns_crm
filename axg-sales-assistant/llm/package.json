@@ -1,0 +1,13 @@
+{
+  "name": "axg-llm",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Language layer for the AXG Sales Assistant (Pilot Spec Phase 2/3). The LLM does exactly two things — read an email into a structured AxgInquiry, and phrase a reply from the engine's structured result. It never produces a model code, dimension, or compatibility verdict.",
+  "scripts": {
+    "test": "node --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.69.0"
+  }
+}
