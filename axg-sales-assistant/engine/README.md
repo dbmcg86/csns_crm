@@ -20,6 +20,9 @@ npm test          # → node --test test/*.test.ts
   AXG doesn't have: a **computed** low-flow verdict (steam/liquid velocity floor,
   calibrated to real Yokogawa sizing anchors) and a **3-item remote assembly**
   (sensor + VY4A transmitter + VY1C cable). CLI: `node vy-demo.ts`.
+- **EJA530E** pressure transmitter — `configureEja(inquiry)`. Adds the **range/span/
+  turndown** computed module: the required span selects the capsule and becomes the
+  3-point factory-calibrated range. Fail-safe `/FU1`. CLI: `node eja-demo.ts`.
 
 ## Try it yourself (interactive)
 

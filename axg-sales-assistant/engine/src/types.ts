@@ -138,3 +138,17 @@ export interface VyInquiry {
   cableLengthM?: number;
   outputType?: string;
 }
+
+/** The structured spec the EJA530E pressure-transmitter engine consumes. */
+export interface EjaInquiry {
+  /** Required pressure span / range top in psi (ranges assumed zero-start). */
+  requiredSpanPsi?: number;
+  /** Undefined = unstated → fail-safe holds /FU1 and asks. */
+  area?: 'general_purpose' | 'hazardous';
+  fluid?: string;
+  temperatureMaxC?: number;
+  pressureConnection?: 'female' | 'male';
+  bracket?: 'yes' | 'no';
+  indicator?: 'yes' | 'no';
+  outputType?: string;
+}

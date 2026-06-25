@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { extractInquiry, extractVyInquiry } from '../src/extract.ts';
 import { runEmail, runInquiry } from '../src/pipeline.ts';
 import { factsPacket } from '../src/reply.ts';
-import { AXG_INQUIRY_SCHEMA, VY_INQUIRY_SCHEMA } from '../src/schema.ts';
+import { AXG_INQUIRY_SCHEMA, VY_INQUIRY_SCHEMA, EJA_INQUIRY_SCHEMA } from '../src/schema.ts';
 import { configureAxg } from '../../engine/src/axg.ts';
 import type { LlmClient } from '../src/client.ts';
 
@@ -25,6 +25,11 @@ const VY_STEAM_JSON = {
   sizeInch: 3, sizeMm: null, connectionType: 'flange', connectionRating: null, area: null,
   fluid: 'saturated steam', temperatureMaxC: null, flowGpm: null, steamPressurePsig: 150,
   steamMassLbHr: 5000, tempCompensated: null, mount: null, cableLengthM: null, outputType: null,
+};
+
+const EJA_JSON = {
+  requiredSpanPsi: 100, area: 'hazardous', fluid: null, temperatureMaxC: null,
+  pressureConnection: null, bracket: null, indicator: null, outputType: null,
 };
 
 // A fake client that answers all three call types: triage (schema has `instrument`),
@@ -102,6 +107,19 @@ test('routed pipeline sends a steam inquiry through VY, and the computed verdict
   assert.match(replyCall.messages[0].content, /computed_sizing: low_flow \[pass\]/);
 });
 
+test('routed pipeline sends a pressure inquiry through EJA, and the computed range verdict reaches the reply', async () => {
+  const { client, calls } = fakeClient({ instrument: 'eja', inquiryJson: EJA_JSON });
+  const routed = await runInquiry('Need a pressure transmitter, 0-100 psi, explosion proof.', { client });
+
+  assert.equal(routed.instrument, 'eja');
+  assert.equal(routed.result!.modelCode!.partNumber, 'EJA530E-JBS4N-012EL/FU1/D1');
+  assert.equal(routed.result!.computed!.status, 'pass');
+
+  const replyCall = calls.find((c) => !c.output_config);
+  assert.match(replyCall.messages[0].content, /EJA530E-JBS4N-012EL\/FU1\/D1/);
+  assert.match(replyCall.messages[0].content, /computed_sizing: range_span/);
+});
+
 test('routed pipeline declines cleanly on an unrecognized inquiry — no engine, no extractor call', async () => {
   const { client, calls } = fakeClient({ instrument: 'unrecognized', inquiryJson: {} });
   const routed = await runInquiry('Do you sell pressure gauges?', { client });
@@ -129,8 +147,8 @@ test('factsPacket carries computed sizing and assembly items for a remote VY res
 });
 
 // ---- schemas well-formed ----
-test('both inquiry schemas are well-formed structured output (all properties required + closed)', () => {
-  for (const schema of [AXG_INQUIRY_SCHEMA, VY_INQUIRY_SCHEMA]) {
+test('all inquiry schemas are well-formed structured output (all properties required + closed)', () => {
+  for (const schema of [AXG_INQUIRY_SCHEMA, VY_INQUIRY_SCHEMA, EJA_INQUIRY_SCHEMA]) {
     assert.equal(schema.additionalProperties, false);
     const props = Object.keys(schema.properties);
     assert.deepEqual([...schema.required].sort(), props.sort());

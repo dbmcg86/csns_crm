@@ -9,9 +9,10 @@
 
 import { configureAxg } from '../../engine/src/axg.ts';
 import { configureVy } from '../../engine/src/vy.ts';
-import type { AxgInquiry, EngineResult, VyInquiry } from '../../engine/src/types.ts';
+import { configureEja } from '../../engine/src/eja.ts';
+import type { AxgInquiry, EjaInquiry, EngineResult, VyInquiry } from '../../engine/src/types.ts';
 import type { LlmClient } from './client.ts';
-import { extractInquiry, extractVyInquiry } from './extract.ts';
+import { extractInquiry, extractEjaInquiry, extractVyInquiry } from './extract.ts';
 import { draftReply } from './reply.ts';
 import { triageInstrument, type Instrument } from './triage.ts';
 
@@ -37,7 +38,7 @@ export async function runEmail(emailText: string, opts: PipelineOptions = {}): P
 export interface RoutedResult {
   instrument: Instrument;
   triageReason: string;
-  inquiry?: AxgInquiry | VyInquiry;
+  inquiry?: AxgInquiry | VyInquiry | EjaInquiry;
   result?: EngineResult;
   draft: string;
 }
@@ -60,11 +61,18 @@ export async function runInquiry(emailText: string, opts: PipelineOptions = {}):
     return { instrument: 'vy', triageReason: triage.reason, inquiry, result, draft };
   }
 
+  if (triage.instrument === 'eja') {
+    const inquiry = await extractEjaInquiry(emailText, { client });
+    const result = configureEja(inquiry);
+    const draft = await draftReply(emailText, result, { client });
+    return { instrument: 'eja', triageReason: triage.reason, inquiry, result, draft };
+  }
+
   // unrecognized — recognize and decline cleanly, don't force it into an extractor
   const draft =
     `Thanks for the inquiry. ${triage.reason} ` +
-    `Could you confirm the instrument type — a magnetic flowmeter (for conductive liquids) ` +
-    `or a vortex flowmeter (for steam/gas) — and the key process details? ` +
+    `Could you confirm the instrument type — a magnetic flowmeter (conductive liquids), ` +
+    `a vortex flowmeter (steam/gas), or a pressure transmitter — and the key process details? ` +
     `Then I can put together an accurate quote.\n\nBest regards,\nAllied Instrumentation`;
   return { instrument: 'unrecognized', triageReason: triage.reason, draft };
 }
