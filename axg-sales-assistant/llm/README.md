@@ -11,9 +11,17 @@ Those come from the deterministic engine (`../engine`), which sits between the t
 LLM calls. Every fact in the drafted reply originates in the engine, not the model.
 
 ```
-email ──▶ extractInquiry (LLM) ──▶ AxgInquiry ──▶ configureAxg (engine) ──▶ EngineResult ──▶ draftReply (LLM) ──▶ draft
-          structured output                         every fact lives here        conveys facts verbatim
+                ┌─ axg ─▶ extractInquiry   ─▶ configureAxg ─┐
+email ─▶ triage ┼─ vy  ─▶ extractVyInquiry ─▶ configureVy  ─┼─▶ draftReply (LLM) ─▶ draft
+        (LLM)   └─ unrecognized ─▶ clean decline ───────────┘   conveys facts verbatim
 ```
+
+`triageInstrument` is a coarse router (Pilot Spec §15.1): it picks the instrument
+*before* extraction, because a vortex inquiry and a mag inquiry share almost no fields.
+It is biased to **decline when unsure** (§15.2) — steam/gas → vortex, conductive liquid
+→ mag, anything ambiguous or out-of-scope → a clean "which instrument did you mean?"
+reply instead of a forced wrong answer. `runInquiry(email)` runs the whole routed flow;
+`runEmail(email)` is the AXG-only shortcut.
 
 ## How the anti-hallucination guarantee is enforced here
 

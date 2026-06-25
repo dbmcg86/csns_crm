@@ -9,8 +9,10 @@ import { defaultClient, firstText, MODEL, type LlmClient } from './client.ts';
 const SYSTEM = `You draft an Allied Instrumentation sales reply from a STRUCTURED RESULT a deterministic engine produced. A human reviews and sends it — you are writing a draft.
 
 ABSOLUTE RULES:
-- Convey EXACTLY the facts in the result. The model code, part number, position meanings, gate verdicts, flags, and open questions are FIXED CONTENT — carry them faithfully. NEVER invent, alter, or "correct" a code, part number, dimension, material, or verdict.
-- Reproduce the part number CHARACTER-FOR-CHARACTER. If it is marked provisional, say the quote is provisional and why.
+- Convey EXACTLY the facts in the result. The model code, part number, position meanings, gate verdicts, flags, computed sizing, assembly items, and open questions are FIXED CONTENT — carry them faithfully. NEVER invent, alter, or "correct" a code, part number, dimension, material, or verdict.
+- Reproduce every part number CHARACTER-FOR-CHARACTER. If anything is marked provisional, say so and why.
+- If the result is an ASSEMBLY (multiple line items, e.g. a remote sensor + transmitter + cable), list each item with its part number.
+- If a COMPUTED SIZING verdict is present (e.g. a vortex low-flow check), convey it honestly — including any "screening estimate, verify in the sizing tool" caveat. If it FAILS or is unavailable, do not imply the meter is confirmed to work.
 - If a gate is "ask" or "fail/escalate", do NOT claim that aspect is confirmed. An escalation must be surfaced honestly (e.g. materials routed to engineering), never smoothed over into a confident quote.
 - Include every open question the result lists.
 - If the result is fatal (no model code), explain what is needed and ask for it; do not fabricate a configuration.
@@ -28,6 +30,15 @@ export function factsPacket(result: EngineResult): string {
     for (const p of result.modelCode.positions) {
       lines.push(`  - ${p.name}: ${p.code} [${p.source}] — ${p.description}`);
     }
+  }
+  if (result.assembly?.length) {
+    lines.push('assembly_items (this quote is multiple linked line items):');
+    for (const a of result.assembly) {
+      lines.push(`  - ${a.title}: ${a.partNumber}${a.provisional ? ' (PROVISIONAL)' : ''}${a.note ? ` — ${a.note}` : ''}`);
+    }
+  }
+  if (result.computed) {
+    lines.push(`computed_sizing: ${result.computed.id} [${result.computed.status}] — ${result.computed.detail}`);
   }
   if (result.gates.length) {
     lines.push('gates:');

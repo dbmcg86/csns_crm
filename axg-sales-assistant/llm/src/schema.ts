@@ -1,9 +1,9 @@
-// The structured-output schema the extractor forces the model to fill. Mirrors
-// the engine's AxgInquiry. Every field is nullable and listed in `required` (the
+// Structured-output schemas the extractors force the model to fill. Each mirrors an
+// engine inquiry type. Every field is nullable and listed in `required` (the
 // structured-outputs contract), so the model emits a complete object and signals
-// "not stated" with null — which cleanInquiry then drops to undefined.
+// "not stated" with null — which dropNulls then strips to undefined.
 
-import type { AxgInquiry } from '../../engine/src/types.ts';
+import type { AxgInquiry, VyInquiry } from '../../engine/src/types.ts';
 
 const nullable = (type: string) => ({ type: [type, 'null'] });
 const nullableEnum = (values: string[]) => ({
@@ -41,11 +41,40 @@ export const AXG_INQUIRY_SCHEMA = {
   },
 } as const;
 
-/** Drop nulls (the model's "not stated" signal) so the engine sees only stated fields. */
-export function cleanInquiry(raw: Record<string, unknown>): AxgInquiry {
+export const VY_INQUIRY_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: [
+    'sizeInch', 'sizeMm', 'connectionType', 'connectionRating', 'area', 'fluid',
+    'temperatureMaxC', 'flowGpm', 'steamPressurePsig', 'steamMassLbHr',
+    'tempCompensated', 'mount', 'cableLengthM', 'outputType',
+  ],
+  properties: {
+    sizeInch: nullable('number'),
+    sizeMm: nullable('number'),
+    connectionType: nullableEnum(['wafer', 'flange']),
+    connectionRating: nullableEnum(['150', '300', '600']),
+    area: nullableEnum(['general_purpose', 'hazardous']),
+    fluid: nullable('string'),
+    temperatureMaxC: nullable('number'),
+    flowGpm: nullable('number'),
+    steamPressurePsig: nullable('number'),
+    steamMassLbHr: nullable('number'),
+    tempCompensated: nullableEnum(['yes', 'no']),
+    mount: nullableEnum(['integral', 'remote']),
+    cableLengthM: nullable('number'),
+    outputType: nullable('string'),
+  },
+} as const;
+
+/** Drop nulls (the model's "not stated" signal). */
+export function dropNulls(raw: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(raw)) {
     if (v !== null && v !== undefined) out[k] = v;
   }
-  return out as AxgInquiry;
+  return out;
 }
+
+export const cleanInquiry = (raw: Record<string, unknown>): AxgInquiry => dropNulls(raw) as AxgInquiry;
+export const cleanVyInquiry = (raw: Record<string, unknown>): VyInquiry => dropNulls(raw) as VyInquiry;
