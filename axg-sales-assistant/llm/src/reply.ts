@@ -31,8 +31,11 @@ export function factsPacket(result: EngineResult): string {
       lines.push(`  - ${p.name}: ${p.code} [${p.source}] — ${p.description}`);
     }
   }
+  if (result.assemblyNumber) {
+    lines.push(`assembly_number: ${result.assemblyNumber}`);
+  }
   if (result.assembly?.length) {
-    lines.push('assembly_items (this quote is multiple linked line items):');
+    lines.push('assembly_items (this quote is multiple linked line items / a bill of materials):');
     for (const a of result.assembly) {
       lines.push(`  - ${a.title}: ${a.partNumber}${a.provisional ? ' (PROVISIONAL)' : ''}${a.note ? ` — ${a.note}` : ''}`);
     }

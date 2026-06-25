@@ -82,8 +82,10 @@ export interface EngineResult {
   modelCode?: ModelCode;
   /** A computed sizing verdict (e.g. vortex low-flow) that is not a code position. */
   computed?: ComputedSizing;
-  /** N linked items (e.g. remote vortex sensor + transmitter + cable). */
+  /** N linked items (e.g. remote vortex sensor + transmitter + cable; or a valve BOM). */
   assembly?: AssemblyItem[];
+  /** Verified rolled-up order number for an assembly (looked up, never generated). */
+  assemblyNumber?: string;
   companionItems: CompanionItem[];
   gates: Gate[];
   flags: Flag[];
@@ -151,4 +153,16 @@ export interface EjaInquiry {
   bracket?: 'yes' | 'no';
   indicator?: 'yes' | 'no';
   outputType?: string;
+}
+
+/** The structured spec the quarter-turn valve engine consumes. */
+export interface ValveInquiry {
+  family?: 'WKM' | 'FLOW-TEK';
+  sizeInch?: number;
+  /** WKM only: lugged (B5123) vs wafer (B5120). */
+  bodyStyle?: 'lugged' | 'wafer';
+  package?: 'digital' | 'control';
+  airPressure?: '80psi' | '60psi';
+  location?: 'south_digital' | 'loudon_tn' | 'decatur_il';
+  severeService?: 'standard' | 'dry_gas_or_slurry' | 'low_temperature' | 'emergency_shutdown';
 }

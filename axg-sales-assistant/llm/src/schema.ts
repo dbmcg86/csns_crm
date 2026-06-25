@@ -3,7 +3,7 @@
 // structured-outputs contract), so the model emits a complete object and signals
 // "not stated" with null — which dropNulls then strips to undefined.
 
-import type { AxgInquiry, EjaInquiry, VyInquiry } from '../../engine/src/types.ts';
+import type { AxgInquiry, EjaInquiry, ValveInquiry, VyInquiry } from '../../engine/src/types.ts';
 
 const nullable = (type: string) => ({ type: [type, 'null'] });
 const nullableEnum = (values: string[]) => ({
@@ -83,6 +83,21 @@ export const EJA_INQUIRY_SCHEMA = {
   },
 } as const;
 
+export const VALVE_INQUIRY_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['family', 'sizeInch', 'bodyStyle', 'package', 'airPressure', 'location', 'severeService'],
+  properties: {
+    family: nullableEnum(['WKM', 'FLOW-TEK']),
+    sizeInch: nullable('number'),
+    bodyStyle: nullableEnum(['lugged', 'wafer']),
+    package: nullableEnum(['digital', 'control']),
+    airPressure: nullableEnum(['80psi', '60psi']),
+    location: nullableEnum(['south_digital', 'loudon_tn', 'decatur_il']),
+    severeService: nullableEnum(['standard', 'dry_gas_or_slurry', 'low_temperature', 'emergency_shutdown']),
+  },
+} as const;
+
 /** Drop nulls (the model's "not stated" signal). */
 export function dropNulls(raw: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
@@ -95,3 +110,4 @@ export function dropNulls(raw: Record<string, unknown>): Record<string, unknown>
 export const cleanInquiry = (raw: Record<string, unknown>): AxgInquiry => dropNulls(raw) as AxgInquiry;
 export const cleanVyInquiry = (raw: Record<string, unknown>): VyInquiry => dropNulls(raw) as VyInquiry;
 export const cleanEjaInquiry = (raw: Record<string, unknown>): EjaInquiry => dropNulls(raw) as EjaInquiry;
+export const cleanValveInquiry = (raw: Record<string, unknown>): ValveInquiry => dropNulls(raw) as ValveInquiry;

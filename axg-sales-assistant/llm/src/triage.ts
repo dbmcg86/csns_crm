@@ -6,7 +6,7 @@
 
 import { defaultClient, firstText, MODEL, type LlmClient } from './client.ts';
 
-export type Instrument = 'axg' | 'vy' | 'eja' | 'unrecognized';
+export type Instrument = 'axg' | 'vy' | 'eja' | 'valve' | 'unrecognized';
 
 export interface Triage {
   instrument: Instrument;
@@ -18,7 +18,7 @@ const TRIAGE_SCHEMA = {
   additionalProperties: false,
   required: ['instrument', 'reason'],
   properties: {
-    instrument: { type: 'string', enum: ['axg', 'vy', 'eja', 'unrecognized'] },
+    instrument: { type: 'string', enum: ['axg', 'vy', 'eja', 'valve', 'unrecognized'] },
     reason: { type: 'string' },
   },
 } as const;
@@ -29,9 +29,10 @@ Choose one:
 - "axg" — a MAGNETIC flowmeter (Yokogawa AXG). Mag meters measure FLOW of CONDUCTIVE LIQUIDS (water, slurry, chemicals, wastewater). Pick this for "mag meter"/"magnetic", or a conductive liquid flow line where a mag is appropriate.
 - "vy" — a VORTEX flowmeter (Yokogawa VY). Pick this for FLOW of STEAM (saturated or superheated) or GAS — a magnetic meter physically CANNOT measure steam or gas (non-conductive). Also pick it if the customer says "vortex".
 - "eja" — a PRESSURE TRANSMITTER (Yokogawa EJA530E). Pick this when the customer is measuring PRESSURE (gauge pressure), gives a pressure range/span (e.g. "0-100 psi transmitter"), or asks for a "pressure transmitter"/"pressure gauge transmitter". This measures pressure, NOT flow.
-- "unrecognized" — anything else, or genuinely ambiguous: a different instrument (level, temperature, valve, DP/flow-via-DP), a non-instrument request, or not enough signal to tell confidently.
+- "valve" — an actuated QUARTER-TURN VALVE assembly (Allied WKM butterfly or FLOW-TEK ball with an actuator). Pick this for "butterfly valve", "ball valve", "actuated valve", "on/off valve", or a "control valve" that is a quarter-turn ball/butterfly. NOT a measurement instrument — it controls flow.
+- "unrecognized" — anything else, or genuinely ambiguous: a different instrument (level, temperature, DP/flow-via-DP), a different valve type (globe/gate/third-party control valve), a non-instrument request, or not enough signal to tell confidently.
 
-KEY RULES: flow of steam or gas => "vy", never "axg". Flow of a conductive liquid => "axg". A PRESSURE measurement (not flow) => "eja". When you cannot tell confidently, choose "unrecognized" and say what you'd need — do NOT guess. A wrong route sends the inquiry to the wrong extractor and produces a plausible wrong answer.
+KEY RULES: flow of steam or gas => "vy", never "axg". Flow of a conductive liquid => "axg". A PRESSURE measurement (not flow) => "eja". An actuated quarter-turn butterfly/ball valve => "valve". When you cannot tell confidently, choose "unrecognized" and say what you'd need — do NOT guess. A wrong route sends the inquiry to the wrong extractor and produces a plausible wrong answer.
 
 Give a one-sentence reason.`;
 

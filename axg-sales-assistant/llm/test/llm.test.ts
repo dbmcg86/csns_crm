@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { extractInquiry, extractVyInquiry } from '../src/extract.ts';
 import { runEmail, runInquiry } from '../src/pipeline.ts';
 import { factsPacket } from '../src/reply.ts';
-import { AXG_INQUIRY_SCHEMA, VY_INQUIRY_SCHEMA, EJA_INQUIRY_SCHEMA } from '../src/schema.ts';
+import { AXG_INQUIRY_SCHEMA, VY_INQUIRY_SCHEMA, EJA_INQUIRY_SCHEMA, VALVE_INQUIRY_SCHEMA } from '../src/schema.ts';
 import { configureAxg } from '../../engine/src/axg.ts';
 import type { LlmClient } from '../src/client.ts';
 
@@ -30,6 +30,11 @@ const VY_STEAM_JSON = {
 const EJA_JSON = {
   requiredSpanPsi: 100, area: 'hazardous', fluid: null, temperatureMaxC: null,
   pressureConnection: null, bracket: null, indicator: null, outputType: null,
+};
+
+const VALVE_JSON = {
+  family: 'WKM', sizeInch: 6, bodyStyle: null, package: null,
+  airPressure: null, location: null, severeService: null,
 };
 
 // A fake client that answers all three call types: triage (schema has `instrument`),
@@ -120,6 +125,19 @@ test('routed pipeline sends a pressure inquiry through EJA, and the computed ran
   assert.match(replyCall.messages[0].content, /computed_sizing: range_span/);
 });
 
+test('routed pipeline sends a valve inquiry through the valve engine, and the assembly reaches the reply', async () => {
+  const { client, calls } = fakeClient({ instrument: 'valve', inquiryJson: VALVE_JSON });
+  const routed = await runInquiry('Need a 6" WKM butterfly valve, actuated.', { client });
+
+  assert.equal(routed.instrument, 'valve');
+  assert.equal(routed.result!.kind, 'assembly');
+  assert.equal(routed.result!.assemblyNumber, '6-B5120LOSRTVFDXTK');
+
+  const replyCall = calls.find((c) => !c.output_config);
+  assert.match(replyCall.messages[0].content, /assembly_number: 6-B5120LOSRTVFDXTK/);
+  assert.match(replyCall.messages[0].content, /Actuator: XL426SR80/);
+});
+
 test('routed pipeline declines cleanly on an unrecognized inquiry — no engine, no extractor call', async () => {
   const { client, calls } = fakeClient({ instrument: 'unrecognized', inquiryJson: {} });
   const routed = await runInquiry('Do you sell pressure gauges?', { client });
@@ -148,7 +166,7 @@ test('factsPacket carries computed sizing and assembly items for a remote VY res
 
 // ---- schemas well-formed ----
 test('all inquiry schemas are well-formed structured output (all properties required + closed)', () => {
-  for (const schema of [AXG_INQUIRY_SCHEMA, VY_INQUIRY_SCHEMA, EJA_INQUIRY_SCHEMA]) {
+  for (const schema of [AXG_INQUIRY_SCHEMA, VY_INQUIRY_SCHEMA, EJA_INQUIRY_SCHEMA, VALVE_INQUIRY_SCHEMA]) {
     assert.equal(schema.additionalProperties, false);
     const props = Object.keys(schema.properties);
     assert.deepEqual([...schema.required].sort(), props.sort());

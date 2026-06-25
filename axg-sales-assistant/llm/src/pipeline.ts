@@ -10,9 +10,10 @@
 import { configureAxg } from '../../engine/src/axg.ts';
 import { configureVy } from '../../engine/src/vy.ts';
 import { configureEja } from '../../engine/src/eja.ts';
-import type { AxgInquiry, EjaInquiry, EngineResult, VyInquiry } from '../../engine/src/types.ts';
+import { configureValve } from '../../engine/src/valve.ts';
+import type { AxgInquiry, EjaInquiry, EngineResult, ValveInquiry, VyInquiry } from '../../engine/src/types.ts';
 import type { LlmClient } from './client.ts';
-import { extractInquiry, extractEjaInquiry, extractVyInquiry } from './extract.ts';
+import { extractInquiry, extractEjaInquiry, extractValveInquiry, extractVyInquiry } from './extract.ts';
 import { draftReply } from './reply.ts';
 import { triageInstrument, type Instrument } from './triage.ts';
 
@@ -38,7 +39,7 @@ export async function runEmail(emailText: string, opts: PipelineOptions = {}): P
 export interface RoutedResult {
   instrument: Instrument;
   triageReason: string;
-  inquiry?: AxgInquiry | VyInquiry | EjaInquiry;
+  inquiry?: AxgInquiry | VyInquiry | EjaInquiry | ValveInquiry;
   result?: EngineResult;
   draft: string;
 }
@@ -66,6 +67,13 @@ export async function runInquiry(emailText: string, opts: PipelineOptions = {}):
     const result = configureEja(inquiry);
     const draft = await draftReply(emailText, result, { client });
     return { instrument: 'eja', triageReason: triage.reason, inquiry, result, draft };
+  }
+
+  if (triage.instrument === 'valve') {
+    const inquiry = await extractValveInquiry(emailText, { client });
+    const result = configureValve(inquiry);
+    const draft = await draftReply(emailText, result, { client });
+    return { instrument: 'valve', triageReason: triage.reason, inquiry, result, draft };
   }
 
   // unrecognized — recognize and decline cleanly, don't force it into an extractor

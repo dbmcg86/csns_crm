@@ -25,7 +25,7 @@ phrase a reply from a structured result packet. It never produces a fact.
 | 1 | Deterministic configurator engine + tests | no | ✅ done (`engine/`, 11 tests + CLI) |
 | 2 | Email extraction → structured spec | yes | ✅ done (`llm/src/extract.ts`) |
 | 3 | Draft assembly (email in → spec + code + questions out) | yes | ✅ done (`llm/src/pipeline.ts`) |
-| 4 | Expand instruments (VY, EJA) + UI | — | ◐ VY + EJA530E ported & LLM-routed; UI next |
+| 4 | Expand instruments (VY, EJA, valves) + UI | — | ◐ AXG/VY/EJA530E/valves ported & LLM-routed; UI next |
 
 Phases 1–3 are built. The engine is the deterministic "trust foundation"; the language
 layer (Phase 2/3) brackets it — extract before, reply after — so the LLM never produces a

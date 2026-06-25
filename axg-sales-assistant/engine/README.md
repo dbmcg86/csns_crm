@@ -23,6 +23,11 @@ npm test          # → node --test test/*.test.ts
 - **EJA530E** pressure transmitter — `configureEja(inquiry)`. Adds the **range/span/
   turndown** computed module: the required span selects the capsule and becomes the
   3-point factory-calibrated range. Fail-safe `/FU1`. CLI: `node eja-demo.ts`.
+- **Quarter-turn valves** — `configureValve(inquiry)`. The non-suffix-code instrument:
+  a multi-component **assembly** (valve + linkage + actuator + mounting + trim) resolved
+  from **field-proven stock builds**, with the verified **rolled-up assembly number looked
+  up, never generated**. Standard service only — severe service is flagged, not auto-sized.
+  CLI: `node valve-demo.ts`.
 
 ## Try it yourself (interactive)
 

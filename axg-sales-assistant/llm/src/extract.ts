@@ -3,9 +3,9 @@
 // missing — it does NOT infer engineering facts, fill defaults, or produce codes.
 // Defaults and validation are the engine's job (Pilot Spec §2, §6).
 
-import type { AxgInquiry, EjaInquiry, VyInquiry } from '../../engine/src/types.ts';
+import type { AxgInquiry, EjaInquiry, ValveInquiry, VyInquiry } from '../../engine/src/types.ts';
 import { defaultClient, firstText, MODEL, type LlmClient } from './client.ts';
-import { AXG_INQUIRY_SCHEMA, EJA_INQUIRY_SCHEMA, VY_INQUIRY_SCHEMA, cleanInquiry, cleanEjaInquiry, cleanVyInquiry } from './schema.ts';
+import { AXG_INQUIRY_SCHEMA, EJA_INQUIRY_SCHEMA, VALVE_INQUIRY_SCHEMA, VY_INQUIRY_SCHEMA, cleanInquiry, cleanEjaInquiry, cleanValveInquiry, cleanVyInquiry } from './schema.ts';
 
 export interface ExtractOptions {
   client?: LlmClient;
@@ -73,6 +73,27 @@ export async function extractInquiry(emailText: string, opts: ExtractOptions = {
 export async function extractEjaInquiry(emailText: string, opts: ExtractOptions = {}): Promise<EjaInquiry> {
   const client = opts.client ?? (await defaultClient());
   return cleanEjaInquiry(await extractWith(emailText, EJA_SYSTEM, EJA_INQUIRY_SCHEMA, client));
+}
+
+const VALVE_SYSTEM = `You read inbound sales inquiries for Allied quarter-turn valve assemblies and extract a STRUCTURED SPECIFICATION. You are a careful reader, not an engineer.
+
+STRICT RULES:
+- Extract ONLY what the customer explicitly states or unambiguously means. Map plain English onto the fields:
+  - "butterfly" / "WKM" -> family: "WKM"; "ball valve" / "FLOW-TEK" / "flow tek" -> family: "FLOW-TEK".
+  - "6 inch" / "6\"" -> sizeInch: 6.
+  - "lugged" -> bodyStyle: "lugged"; "wafer" -> "wafer".
+  - "control" / "modulating" / "throttling" / "positioner" -> package: "control"; "on/off" / "open-close" / "isolation" -> package: "digital".
+  - "60 psi air" / "60 psig instrument air" -> airPressure: "60psi"; "80 psi" -> "80psi".
+  - location names: "South Digital" -> south_digital; "Loudon" -> loudon_tn; "Decatur" -> decatur_il.
+  - severe service: "slurry" / "dry gas" -> dry_gas_or_slurry; "low temp" / "cryogenic" -> low_temperature; "ESD" / "emergency shutdown" -> emergency_shutdown.
+- If something is NOT stated, return null for that field. NEVER guess, infer, or fill a default.
+- Do NOT pick the actuator, linkage, or assembly number — the deterministic engine looks those up from field-proven builds. You only transcribe.
+
+Return the structured object. Use null for every field the customer did not state.`;
+
+export async function extractValveInquiry(emailText: string, opts: ExtractOptions = {}): Promise<ValveInquiry> {
+  const client = opts.client ?? (await defaultClient());
+  return cleanValveInquiry(await extractWith(emailText, VALVE_SYSTEM, VALVE_INQUIRY_SCHEMA, client));
 }
 
 export async function extractVyInquiry(emailText: string, opts: ExtractOptions = {}): Promise<VyInquiry> {
