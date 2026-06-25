@@ -13,6 +13,14 @@ cd axg-sales-assistant/engine
 npm test          # → node --test test/*.test.ts
 ```
 
+## Instruments
+
+- **AXG** magnetic flowmeter — `configureAxg(inquiry)` (the pilot).
+- **VY** vortex flowmeter — `configureVy(inquiry)`. Adds two result-contract features
+  AXG doesn't have: a **computed** low-flow verdict (steam/liquid velocity floor,
+  calibrated to real Yokogawa sizing anchors) and a **3-item remote assembly**
+  (sensor + VY4A transmitter + VY1C cable). CLI: `node vy-demo.ts`.
+
 ## Try it yourself (interactive)
 
 `demo.ts` is a personal test harness — throw inquiries at the real engine and see the

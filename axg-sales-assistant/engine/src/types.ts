@@ -48,13 +48,42 @@ export interface CompanionItem {
 }
 
 /**
+ * A sizing outcome the engine CALCULATED — not a code position (Pilot Spec §15.4).
+ * The vortex low-flow/Reynolds verdict is the first of these; a valve Cv result
+ * would be another. This is the seam that lets non-suffix-code instruments plug in.
+ */
+export interface ComputedSizing {
+  id: string;
+  status: 'pass' | 'caution' | 'fail' | 'unavailable';
+  title: string;
+  detail: string;
+  /** Optional numeric outputs (velocity, density, cutoff, …). */
+  metrics?: Record<string, string | number>;
+}
+
+/** One item in a multi-component, possibly multi-vendor assembly (Pilot Spec §14.7). */
+export interface AssemblyItem {
+  role: string;
+  title: string;
+  partNumber: string;
+  provisional?: boolean;
+  positions?: PositionResult[];
+  note?: string;
+}
+
+/**
  * The shape EVERY instrument engine returns. A transmitter populates `modelCode`
- * + `gates`; a valve (later) would populate computed-sizing + assembly + `gates`.
+ * + `gates`; a vortex adds `computed`; a remote/multi-vendor build uses `assembly`.
+ * A result may use any subset — the renderer accommodates all of them.
  */
 export interface EngineResult {
   instrument: string;
-  kind: 'model_code';
+  kind: 'model_code' | 'assembly';
   modelCode?: ModelCode;
+  /** A computed sizing verdict (e.g. vortex low-flow) that is not a code position. */
+  computed?: ComputedSizing;
+  /** N linked items (e.g. remote vortex sensor + transmitter + cable). */
+  assembly?: AssemblyItem[];
   companionItems: CompanionItem[];
   gates: Gate[];
   flags: Flag[];
@@ -84,4 +113,28 @@ export interface AxgInquiry {
   outputType?: string;
   competitorBrand?: string;
   competitorModel?: string;
+}
+
+/** The structured spec the VY vortex engine consumes. */
+export interface VyInquiry {
+  sizeInch?: number;
+  sizeMm?: number;
+  connectionType?: 'wafer' | 'flange';
+  connectionRating?: '150' | '300' | '600';
+  /** Undefined = unstated → fail-safe holds FF1 and asks. */
+  area?: 'general_purpose' | 'hazardous';
+  fluid?: string;
+  temperatureMaxC?: number;
+  /** Liquid volumetric flow, for the liquid low-flow screen. */
+  flowGpm?: number;
+  /** Saturated-steam line pressure (psig), for the steam low-flow screen. */
+  steamPressurePsig?: number;
+  /** Steam mass flow (lb/hr), to check it clears the computed cutoff. */
+  steamMassLbHr?: number;
+  /** Force the temperature-compensated (B) shedder, or keep general (A). */
+  tempCompensated?: 'yes' | 'no';
+  mount?: 'integral' | 'remote';
+  /** Remote only: sensor→transmitter cable length (m). */
+  cableLengthM?: number;
+  outputType?: string;
 }
