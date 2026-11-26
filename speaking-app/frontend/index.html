@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice Coach</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M2 20 Q8 4 14 16 T26 12 L30 10' fill='none' stroke='%23c2552d' stroke-width='3.5' stroke-linecap='round'/></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M2 20 Q8 4 14 16 T26 12 L30 10"/></svg>
+      <span>Voice Coach</span>
+    </div>
+    <button id="new-run" class="ghost">New take</button>
+  </header>
+
+  <div id="model-banner" class="banner" hidden></div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <h2>Your takes</h2>
+      <ul id="history" class="history"><li class="empty">Loading…</li></ul>
+    </aside>
+
+    <main>
+      <!-- ============================== Practice ============================== -->
+      <section id="practice">
+        <div class="passage-bar">
+          <label>
+            <span class="sr-only">Passage</span>
+            <select id="passage"></select>
+          </label>
+          <span class="chip">Focus: <strong id="passage-focus"></strong></span>
+        </div>
+        <p id="passage-hint" class="hint"></p>
+        <textarea id="script" class="script" rows="5" spellcheck="false" aria-label="Script to read aloud"></textarea>
+
+        <div class="stage">
+          <canvas id="live" class="live" aria-label="Live pitch line"></canvas>
+          <div class="live-stats">
+            <div><span class="k">Time</span><span id="timer" class="v">0:00</span></div>
+            <div><span class="k">Range, last 10s</span><span id="live-spread" class="v">–</span></div>
+            <div><span class="k">Pitch</span><span id="live-hz" class="v">–</span></div>
+            <div class="level"><span class="k">Level</span><span class="meter"><span id="level-fill"></span></span></div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button id="record" class="record"><span class="rec-dot"></span><span id="record-label">Record</span></button>
+          <p class="kbd-hint">or press <kbd>Space</kbd></p>
+        </div>
+        <p id="status" class="status" hidden></p>
+      </section>
+
+      <!-- ============================== Results =============================== -->
+      <section id="results" hidden>
+        <div class="results-head">
+          <div>
+            <h1 id="result-title"></h1>
+            <p id="result-meta" class="meta"></p>
+          </div>
+          <button id="again" class="primary">Practice again</button>
+        </div>
+
+        <audio id="playback" controls preload="auto"></audio>
+
+        <div id="cards" class="cards"></div>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Your melody</h2>
+            <ul class="legend">
+              <li><i class="sw accent"></i>Pitch</li>
+              <li><i class="sw band"></i>Volume</li>
+              <li><i class="sw good"></i>Power pause</li>
+              <li><i class="sw warn"></i>Hesitation / flat</li>
+            </ul>
+          </div>
+          <canvas id="timeline" class="timeline"></canvas>
+          <h3 class="sub">Tempo</h3>
+          <canvas id="pace" class="pace"></canvas>
+          <p class="fine">Click anywhere on a chart to jump there.</p>
+        </section>
+
+        <div class="two-col">
+          <section class="panel">
+            <h2>Transcript</h2>
+            <p id="script-match" class="script-match" hidden></p>
+            <p id="transcript" class="transcript"></p>
+            <ul class="legend">
+              <li><span class="w filler">um</span>Filler</li>
+              <li><span class="w soft">like</span>Soft filler</li>
+              <li><span class="w unclear">word</span>Unclear</li>
+              <li><span class="pause power" style="--len:1"></span>Power pause</li>
+              <li><span class="pause hesitation" style="--len:1"></span>Hesitation</li>
+            </ul>
+          </section>
+          <section class="panel">
+            <h2>Moments</h2>
+            <ul id="notes" class="notes"></ul>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
